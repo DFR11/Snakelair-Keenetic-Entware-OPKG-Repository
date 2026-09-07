@@ -176,3 +176,26 @@ ipset list sr_nwg0
 1. **Шаг 1**: Откройте `http://172.16.5.1:8088/#interfaces` и убедитесь, что ваши VPN-подключения (например, `nwg0` для WireGuard) включены.
 2. **Шаг 2**: Откройте `http://172.16.5.1:8088/#domain-lists` — по умолчанию основные списки (YouTube, Discord, AI, Исключения РФ) уже активны и готовы к работе.
 3. **Шаг 3**: Пользуйтесь интернетом — все заблокированные ресурсы откроются автоматически и бесшовно!
+
+---
+
+## 🗑️ 8. Полное удаление Smart-Route
+
+### Автоматически:
+```bash
+curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/uninstall.sh | sh -s smart-route
+```
+
+### Вручную через SSH:
+```bash
+/opt/etc/init.d/S99smart-route stop
+killall -9 smart-route 2>/dev/null
+opkg remove smart-route --force-remove --force-depends
+rm -f /opt/etc/init.d/S99smart-route /tmp/smart-route.log /opt/var/log/smart-route.log
+rm -rf /opt/etc/smart-route
+
+# Очистка правил iptables и ipset
+iptables -t nat -D PREROUTING -p tcp -m multiport --dports 80,443 -j REDIRECT --to-ports 10880 2>/dev/null
+iptables -t nat -D PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 10853 2>/dev/null
+for s in $(ipset list -n 2>/dev/null | grep -E '^sr_'); do ipset flush "$s"; ipset destroy "$s"; done
+```

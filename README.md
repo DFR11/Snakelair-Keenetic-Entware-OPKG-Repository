@@ -21,7 +21,7 @@
 
 ---
 
-### 2. ⚡ `smart-route` (v1.0.61)
+### 2. ⚡ `smart-route` (v1.0.66)
 **Системный сервис динамической многоинтерфейсной маршрутизации, бесшовного перехвата сбойных соединений (Failover Relay) и аппаратной разгрузки ядра (IPSet / NDM):**
 - Автоматический выбор самого быстрого VPN-канала при сбоях и блокировках (Race/Sequential).
 - Аппаратный оффлоад ядра Linux (0% нагрузки на процессор роутера).
@@ -121,6 +121,91 @@ opkg update && opkg upgrade smart-utils smart-route smart-photo smart-vpn
 
 ---
 
+## 🗑️ Полное удаление пакетов и репозитория
+
+### 1. Автоматическое удаление в одну команду:
+
+```bash
+# Интерактивное меню удаления:
+curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/uninstall.sh | sh
+
+# Быстрое удаление конкретного пакета (с очисткой службы, правил и конфигов):
+curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/uninstall.sh | sh -s smart-utils
+curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/uninstall.sh | sh -s smart-route
+curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/uninstall.sh | sh -s smart-photo
+curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/uninstall.sh | sh -s smart-vpn
+curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/uninstall.sh | sh -s ql-vpn
+
+# Полное удаление ВСЕХ пакетов Snakelair и отключение репозитория OPKG:
+curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/uninstall.sh | sh -s all
+```
+
+---
+
+### 2. Ручное удаление через SSH-консоль:
+
+<details>
+<summary><b>🛠️ Пошаговые команды ручного удаления для каждого пакета</b></summary>
+
+#### Удаление `smart-utils`:
+```bash
+/opt/etc/init.d/S99smart-utils stop
+killall -9 smart-utils 2>/dev/null
+opkg remove smart-utils --force-remove --force-depends
+rm -f /opt/etc/init.d/S99smart-utils /tmp/smart-utils.log /opt/var/log/smart-utils.log
+rm -rf /opt/etc/smart-utils
+```
+
+#### Удаление `smart-route`:
+```bash
+/opt/etc/init.d/S99smart-route stop
+killall -9 smart-route 2>/dev/null
+opkg remove smart-route --force-remove --force-depends
+rm -f /opt/etc/init.d/S99smart-route /tmp/smart-route.log /opt/var/log/smart-route.log
+rm -rf /opt/etc/smart-route
+# Сброс правил iptables и ipset:
+iptables -t nat -D PREROUTING -p tcp -m multiport --dports 80,443 -j REDIRECT --to-ports 10880 2>/dev/null
+iptables -t nat -D PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 10853 2>/dev/null
+for s in $(ipset list -n 2>/dev/null | grep -E '^sr_'); do ipset flush "$s"; ipset destroy "$s"; done
+```
+
+#### Удаление `smart-photo`:
+```bash
+/opt/etc/init.d/S99smart-photo stop
+killall -9 smart-photo 2>/dev/null
+opkg remove smart-photo --force-remove --force-depends
+rm -f /opt/etc/init.d/S99smart-photo /tmp/smart-photo.log /opt/var/log/smart-photo.log
+rm -rf /opt/etc/smart-photo /opt/var/cache/smart-photo
+```
+
+#### Удаление `smart-vpn`:
+```bash
+/opt/etc/init.d/S99smart-vpn stop
+killall -9 smart-vpn sing-box awg 2>/dev/null
+opkg remove smart-vpn --force-remove --force-depends
+rm -f /opt/etc/init.d/S99smart-vpn /tmp/smart-vpn.log /opt/var/log/smart-vpn.log
+rm -rf /opt/etc/smart-vpn
+```
+
+#### Удаление `ql-vpn` (QuakeLive-VPN Server на Linux VPS):
+```bash
+systemctl stop ql-vpn && systemctl disable ql-vpn
+killall -9 ql-vpn 2>/dev/null
+rm -f /usr/local/bin/ql-vpn /etc/systemd/system/ql-vpn.service /etc/sysctl.d/99-qlvpn.conf
+rm -rf /etc/ql-vpn
+systemctl daemon-reload
+```
+
+#### Полное отключение репозитория OPKG:
+```bash
+rm -f /opt/etc/opkg/keenetic.conf /opt/var/opkg-lists/keenetic-custom
+opkg update
+```
+
+</details>
+
+---
+
 ## 🌐 Соответствие моделей Keenetic и архитектур
 
 | Архитектура | Модели роутеров Keenetic |
@@ -138,5 +223,7 @@ opkg update && opkg upgrade smart-utils smart-route smart-photo smart-vpn
 
 - 📢 **Telegram-канал и обновления:** [t.me/KeeneticSmartUtils](https://t.me/KeeneticSmartUtils)
 - 💬 **Тема обсуждения на форуме Keenetic:** [Приложения Smart-Utils, Smart-Route, Smart-Photo](https://forum.keenetic.ru/topic/30698-%D0%BF%D1%80%D0%B8%D0%BB%D0%BE%D0%B6%D0%B5%D0%BD%D0%B8%D1%8F-smart-utils-smart-route-smart-photo-snakelair-keenetic-entware-opkg-repository/)
+- 🐞 **Трекер багрепортов и предложений:** [github.com/snakelair/Keenetic/issues](https://github.com/snakelair/Keenetic/issues)
 - 💻 **Исходный код Smart-Utils:** [github.com/snakelair/SmartUtils](https://github.com/snakelair/SmartUtils)
+
 

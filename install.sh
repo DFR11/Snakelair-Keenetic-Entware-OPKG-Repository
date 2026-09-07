@@ -3,6 +3,18 @@ set +e
 
 PACKAGE="${1:-smart-route}"
 
+# Special handling for uninstallation / removal
+if [ "$PACKAGE" = "uninstall" ] || [ "$PACKAGE" = "remove" ] || [ "$PACKAGE" = "purge" ] || [ "$PACKAGE" = "delete" ]; then
+    shift 2>/dev/null || true
+    SCRIPT_DIR="$(dirname "$0")"
+    if [ -f "${SCRIPT_DIR}/uninstall.sh" ]; then
+        exec sh "${SCRIPT_DIR}/uninstall.sh" "$@"
+    else
+        curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/uninstall.sh | sh -s -- "$@"
+        exit $?
+    fi
+fi
+
 # Special handling for ql-vpn (QuakeLive-VPN Server for Linux VPS)
 if [ "$PACKAGE" = "ql-vpn" ] || [ "$PACKAGE" = "qlvpn" ]; then
     printf "\033[1;34m[*]\033[0m Запуск установщика QuakeLive-VPN Server (Linux VPS)...\n"

@@ -235,4 +235,23 @@ ql-vpn token add -server "ВАШ_IP:27960" -name "PlayerName" -tokens /etc/ql-vp
 | **Удалить токен** | `/usr/local/bin/ql-vpn token del -name "Sarge" -tokens /etc/ql-vpn/tokens.json` |
 | **Проверить сетевой туннель** | `ip addr show qlvpn0` |
 | **Проверить счетчики NAT-трафика** | `iptables -t nat -L POSTROUTING -n -v` |
+| **Полное удаление сервера с VPS** | `curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/uninstall.sh \| sh -s ql-vpn` |
+
+---
+
+## 🗑️ 6. Полное удаление QuakeLive-VPN с сервера VPS
+
+### Автоматически:
+```bash
+curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/uninstall.sh | sh -s ql-vpn
+```
+
+### Вручную:
+```bash
+systemctl stop ql-vpn && systemctl disable ql-vpn
+killall -9 ql-vpn 2>/dev/null
+rm -f /usr/local/bin/ql-vpn /etc/systemd/system/ql-vpn.service /etc/sysctl.d/99-qlvpn.conf
+rm -rf /etc/ql-vpn
+systemctl daemon-reload
+```
 
