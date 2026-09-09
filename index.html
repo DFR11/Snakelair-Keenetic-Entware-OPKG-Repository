@@ -136,13 +136,13 @@
     <div class="header">
       <div class="header-badge">⚡ Keenetic Entware Repository</div>
       <h1>Keenetic <span>Smart Apps Hub</span></h1>
-      <p>Официальный репозиторий пакетов OPKG на чистом Go для роутеров Keenetic. Нулевой оверхед, высокая производительность и современные веб-интерфейсы.</p>
+      <p>Official repository of OPKG packages in pure Go for Keenetic routers. Zero overhead, high performance and modern web interfaces.</p>
     </div>
 
     <div class="coexist-banner">
       <div class="coexist-text">
-        <h3>⚡ Одновременная работа на одном роутере</h3>
-        <p>Smart-Photo (порт 8089), Smart-Route (порт 8088), Smart-Utils (порт 8087) и Smart-VPN (порт 8091) полностью изолированы, не конфликтуют и работают с 0% нагрузки в режиме покоя.</p>
+        <h3>⚡ Simultaneous work on one router</h3>
+        <p>Smart-Photo (port 8089), Smart-Route (port 8088), Smart-Utils (port 8087) and Smart-VPN (port 8091) are completely isolated, do not conflict and work with 0% load in idle mode.</p>
       </div>
       <span class="badge badge-cyan">Coexistence Verified</span>
     </div>
@@ -156,21 +156,21 @@
             <span class="badge badge-cyan">v1.0.39</span>
           </div>
           <div class="port-pill">Порт: :8089 (http://192.168.1.1:8089)</div>
-          <p class="desc">Персональный домашний фотосервер в стиле Google Photos прямо на роутере. Читает фото напрямую с USB-накопителей с генерацией миниатюр на лету.</p>
+          <p class="desc">Personal home photo server in Google Photos style right on the router. Reads photos directly from USB drives and generates thumbnails on the fly.</p>
           <ul class="features">
-            <li>Бесконечная хроника фотоленты (Infinite Scroll)</li>
-            <li>Интерактивный скроллер годов и дат справа</li>
-            <li>Полноэкранный просмотрщик, зум, слайд-шоу, EXIF & GPS</li>
-            <li>Выбор нескольких папок и Live-синхронизация</li>
-            <li>0% нагрузки на CPU в режиме ожидания (RAM Logging)</li>
+            <li>Infinite Scroll</li>
+            <li>Interactive scroller of years and dates on the right</li>
+            <li>Full screen viewer, zoom, slideshow, EXIF ​​& GPS</li>
+            <li>Multiple folder selection and Live synchronization</li>
+            <li>0% CPU load in idle mode (RAM Logging)</li>
           </ul>
         </div>
         <div>
-          <div class="cmd-label">Установка в 1 команду по SSH:</div>
-          <div class="cmd-box">curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/install.sh | sh -s smart-photo</div>
+          <div class="cmd-label">Installation in 1 command via SSH:</div>
+          <div class="cmd-box">curl -sSL https://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/install.sh | sh -s smart-photo</div>
           <div class="actions">
             <a href="https://github.com/snakelair/SmartPhoto" target="_blank" class="btn btn-primary">GitHub</a>
-            <a href="smart_photo_USER_GUIDE.md" class="btn btn-secondary">Инструкция</a>
+            <a href="smart_photo_USER_GUIDE.md" class="btn btn-secondary">Instructions</a>
           </div>
         </div>
       </div>
@@ -183,21 +183,21 @@
             <span class="badge badge-blue">v1.0.66</span>
           </div>
           <div class="port-pill">Порт: :8088 (http://192.168.1.1:8088)</div>
-          <p class="desc">Сервис динамической многоинтерфейсной маршрутизации, бесшовного перехвата сбойных соединений (Failover Relay) и аппаратной разгрузки ядра.</p>
+          <p class="desc">Service for dynamic multi-interface routing, seamless interception of failed connections (Failover Relay) and hardware kernel offloading.</p>
           <ul class="features">
-            <li>Автоматический выбор самого быстрого VPN/WAN канала</li>
-            <li>Аппаратный оффлоад ядра Linux (IPSet / NDM)</li>
-            <li>Списки исключений (.ru, .рф, банки, госуслуги)</li>
-            <li>Удобная веб-панель управления и мониторинга</li>
-            <li>0% нагрузки на CPU роутера при передаче трафика</li>
+            <li>Automatic selection of the fastest VPN/WAN channel</li>
+            <li>Hardware offload of Linux kernel (IPSet / NDM)</li>
+            <li>Lists of exceptions (.ru, .рф, banks, government services)</li>
+            <li>Convenient web-based control and monitoring panel</li>
+            <li>0% load on the router CPU when transmitting traffic</li>
           </ul>
         </div>
         <div>
-          <div class="cmd-label">Установка в 1 команду по SSH:</div>
-          <div class="cmd-box">curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/install.sh | sh -s smart-route</div>
+          <div class="cmd-label">Installation in 1 command via SSH:</div>
+          <div class="cmd-box">curl -sSL https://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/install.sh | sh -s smart-route</div>
           <div class="actions">
             <a href="https://github.com/snakelair/SmartRoute" target="_blank" class="btn btn-primary">GitHub</a>
-            <a href="smart_route_user_guide.md" class="btn btn-secondary">Инструкция</a>
+            <a href="smart_route_user_guide.md" class="btn btn-secondary">Instructions</a>
           </div>
         </div>
       </div>
@@ -210,21 +210,21 @@
             <span class="badge badge-purple">v1.0.29</span>
           </div>
           <div class="port-pill">Порт: :8087 (http://192.168.1.1:8087)</div>
-          <p class="desc">Многофункциональный веб-центр администрирования: встроенный веб-терминал, двухпанельный файловый менеджер и менеджер пакетов OPKG.</p>
+          <p class="desc">Multifunctional web administration center: built-in web terminal, two-panel file manager and OPKG package manager.</p>
           <ul class="features">
-            <li>Веб-терминал в браузере (Web SSH / TTY)</li>
-            <li>Total Commander двухпанельный менеджер файлов</li>
-            <li>Управление и поиск пакетов OPKG с автодиагностикой</li>
-            <li>Мониторинг CPU, памяти и накопителей</li>
-            <li>Быстрые бэкапы конфигураций роутера</li>
+            <li>Web terminal in browser (Web SSH/TTY)</li>
+            <li>Total Commander two-panel file manager</li>
+            <li>Management and search of OPKG packages with autodiagnostics</li>
+            <li>CPU, memory and storage monitoring</li>
+            <li>Quick backups of router configurations</li>
           </ul>
         </div>
         <div>
-          <div class="cmd-label">Установка в 1 команду по SSH:</div>
-          <div class="cmd-box">curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/install.sh | sh -s smart-utils</div>
+          <div class="cmd-label">Installation in 1 command via SSH:</div>
+          <div class="cmd-box">curl -sSL https://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/install.sh | sh -s smart-utils</div>
           <div class="actions">
             <a href="https://github.com/snakelair/SmartUtils" target="_blank" class="btn btn-primary">GitHub</a>
-            <a href="smart_utils_user_guide.md" class="btn btn-secondary">Инструкция</a>
+            <a href="smart_utils_user_guide.md" class="btn btn-secondary">Instructions</a>
           </div>
         </div>
       </div>
@@ -237,21 +237,21 @@
             <span class="badge badge-cyan">v1.0.65</span>
           </div>
           <div class="port-pill">Порт: :8091 (http://192.168.1.1:8091)</div>
-          <p class="desc">Единый веб-центр управления VPN: родные туннели KeeneticOS, антицензурные ядра Sing-Box (VLESS Reality, ShadowTLS) и игровой стелс-протокол QuakeLive-VPN.</p>
+          <p class="desc">A single web-based VPN control center: native KeeneticOS tunnels, Sing-Box anti-censorship cores (VLESS Reality, ShadowTLS) and the QuakeLive-VPN stealth gaming protocol.</p>
           <ul class="features">
-            <li>Родные туннели KeeneticOS (WireGuard, AmneziaWG, SSTP)</li>
-            <li>Стелс-протокол QuakeLive-VPN (id Tech 3 NetChan)</li>
+            <li>Native KeeneticOS tunnels (WireGuard, AmneziaWG, SSTP)</li>
+            <li>Stealth protocol QuakeLive-VPN (id Tech 3 NetChan)</li>
             <li>Ядро Sing-Box: VLESS Reality, ShadowTLS, CPU Watchdog</li>
-            <li>Графики трафика и задержки, валидатор конфигураций</li>
-            <li>Автоматический деплой на VPS серверы по SSH в 1 клик</li>
+            <li>Traffic and delay graphs, configuration validator</li>
+            <li>Automatic deployment to VPS servers via SSH in 1 click</li>
           </ul>
         </div>
         <div>
-          <div class="cmd-label">Установка в 1 команду по SSH:</div>
-          <div class="cmd-box">curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/install.sh | sh -s smart-vpn</div>
+          <div class="cmd-label">Installation in 1 command via SSH:</div>
+          <div class="cmd-box">curl -sSL https://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/install.sh | sh -s smart-vpn</div>
           <div class="actions">
             <a href="https://github.com/snakelair/SmartVpn" target="_blank" class="btn btn-primary">GitHub</a>
-            <a href="https://github.com/snakelair/SmartVpn/blob/main/USER_GUIDE.md" target="_blank" class="btn btn-secondary">Инструкция</a>
+            <a href="https://github.com/snakelair/SmartVpn/blob/main/USER_GUIDE.md" target="_blank" class="btn btn-secondary">Instructions</a>
           </div>
         </div>
       </div>
@@ -264,56 +264,56 @@
             <span class="badge badge-purple">v1.0.65</span>
           </div>
           <div class="port-pill">Порт: :8092 (https://server-ip:8092)</div>
-          <p class="desc">Игровой стелс-туннель нового поколения (id Tech 3 NetChan). Маскировка 100% трафика под сетевую игру Quake Live, обход любых блокировок ТСПУ/DPI.</p>
+          <p class="desc">New generation gaming stealth tunnel (id Tech 3 NetChan). Masking 100% of traffic as the network game Quake Live, bypassing any TSPU/DPI blocking.</p>
           <ul class="features">
-            <li>100% маскировка под игровой мультиплеер Quake Live</li>
-            <li>Сверхнизкий пинг UDP и аппаратный шифр AES-128-GCM</li>
-            <li>Веб-панель управления игроками и токенами qlvpn://</li>
-            <li>Клиент Windows: системный трей, Wintun, маршруты</li>
-            <li>Система самообновления на сервере в 1 клик</li>
+            <li>100% disguise as Quake Live multiplayer game</li>
+            <li>Ultra-low UDP ping and AES-128-GCM hardware encryption</li>
+            <li>Web control panel for players and tokens qlvpn://</li>
+            <li>Windows client: system tray, Wintun, routes</li>
+            <li>Self-updating system on the server in 1 click</li>
           </ul>
         </div>
         <div>
-          <div class="cmd-label">Установка на VPS в 1 команду:</div>
-          <div class="cmd-box">curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/install-qlvpn.sh | bash</div>
+          <div class="cmd-label">Installation on VPS in 1 command:</div>
+          <div class="cmd-box">curl -sSL https://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/install-qlvpn.sh | bash</div>
           <div class="actions">
             <a href="https://github.com/snakelair/SmartVpn" target="_blank" class="btn btn-primary">GitHub</a>
-            <a href="ql_vpn_user_guide.md" class="btn btn-secondary">Инструкция</a>
+            <a href="ql_vpn_user_guide.md" class="btn btn-secondary">Instructions</a>
           </div>
         </div>
       </div>
     </div>
 
     <div class="table-section">
-      <h3>🌐 Таблица совместимости архитектур</h3>
+      <h3>🌐 Architecture compatibility table</h3>
       <table>
         <thead>
           <tr>
-            <th>Архитектура Entware</th>
-            <th>Модели роутеров Keenetic</th>
-            <th>Статус</th>
+            <th>Entware architecture</th>
+            <th>Keenetic router models</th>
+            <th>Status</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td><strong>mipsel-3.4</strong></td>
             <td>Viva, Extra, Speedster, Giga (KN-1010/KN-1011), Omni, Skipper, Air, Buddy</td>
-            <td><span class="badge badge-cyan">Готово</span></td>
+            <td><span class="badge badge-cyan">Done</span></td>
           </tr>
           <tr>
             <td><strong>armv7-3.2</strong></td>
             <td>Hero (KN-1011/KN-1012), Titan (KN-1810), Giant (KN-2610), Ultra (KN-1810)</td>
-            <td><span class="badge badge-cyan">Готово</span></td>
+            <td><span class="badge badge-cyan">Done</span></td>
           </tr>
           <tr>
             <td><strong>aarch64-3.10</strong></td>
             <td>Peak (KN-2710), Ultra (KN-1811), Titan (KN-1812), Hero 4G+ (KN-2311)</td>
-            <td><span class="badge badge-cyan">Готово</span></td>
+            <td><span class="badge badge-cyan">Done</span></td>
           </tr>
           <tr>
             <td><strong>x86_64</strong></td>
-            <td>x86 Entware / Виртуальные машины Keenetic</td>
-            <td><span class="badge badge-cyan">Готово</span></td>
+            <td>x86 Entware / Keenetic Virtual Machines</td>
+            <td><span class="badge badge-cyan">Done</span></td>
           </tr>
         </tbody>
       </table>

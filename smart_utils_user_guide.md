@@ -1,66 +1,66 @@
-# 🛠️ Smart-Utils — Руководство пользователя
+# 🛠️ Smart-Utils - User Guide
 
-**Smart-Utils** — это современная панель системного администрирования, управления файлами, пакетами OPKG, терминалами и резервным копированием для роутеров **Keenetic** со средой **Entware**.
-
----
-
-## 🌟 Основные возможности
-
-### 1. 📁 Двухпанельный файловый менеджер (Total Commander)
-- Классический двухпанельный интерфейс с быстрым переходом по системным путям (`/opt`, `/opt/etc`, `/tmp`, `/media`, `/`).
-- **Горячие клавиши:**
-  - `Tab`: переключение между левой и правой панелью
-  - `F3`: быстрый просмотр файла
-  - `F4`: встроенный полноэкранный редактор конфигов с подсветкой синтаксиса и сохранением по `Ctrl + S`
-  - `F5`: быстрое копирование между панелями
-  - `F6`: перемещение / переименование
-  - `F7`: создание новой папки
-  - `F8`: удаление файлов и каталогов
-  - `F9`: архивация в `.tar.gz` или `.zip`
-  - `F10`: смена прав доступа (`chmod`) в графическом окне
-- **Drag-and-Drop:** перетаскивание файлов с компьютера прямо в окно браузера для мгновенной загрузки.
-
-### 2. 💻 Веб-терминалы
-- **Терминал CLI:** прямое управление консолью KeeneticOS (`ndmc` / `(config)>`) с быстрыми системными командами (`show version`, `show interface`, `show ip route`, `show log`).
-- **Терминал SSH:** полнофункциональная Linux-консоль PTY Entware (`/opt/bin/sh`, `/opt/bin/bash`) с полной поддержкой цветов, горячих клавиш (`Ctrl+C`, `Ctrl+Z`, `nano`, `mc`, `top`, `htop`).
-
-### 3. 📦 Менеджер пакетов OPKG
-- **Каталог репозиториев:** просмотр, добавление и удаление пользовательских `.conf` фидов.
-- **Каталог популярных репозиториев:** готовые предустановленные репозитории (Snakelair, AmneziaWG / AWG Manager, Zapret / NFQWS, Sing-Box Naive, Entware Main) с **живым поиском** по названиям, описаниям и дочерним пакетам.
-- Установка, удаление, обновление пакетов в 1 клик с живой консолью логов процесса OPKG.
-
-### 4. 📊 Анализатор системы и процессов
-- Графики загрузки процессора, ядер, памяти, Swap, дисковых накопителей и сетевого трафика.
-- Интерактивная таблица процессов (`top`/`htop`) с сортировкой по столбцам (% CPU, % MEM, PID, RSS), поиском и отправкой сигналов `SIGTERM` / `SIGKILL`.
-
-### 5. 💾 Резервное копирование и восстановление
-- Экспорт и восстановление полного списка установленных OPKG пакетов.
-- Создание сжатых `.tar.gz` архивов конфигурационных файлов `/opt/etc/` и их откат в один клик.
-
-### 6. ⚡ Логирование в RAM (tmpfs)
-- По умолчанию служба Smart-Utils пишет логи в оперативную память (`/tmp/smart-utils.log`), что полностью исключает износ flash-памяти роутера.
+**Smart-Utils** is a modern system administration panel, file management, OPKG packages, terminals and backup for **Keenetic** routers with the **Entware** environment.
 
 ---
 
-## 🚀 Установка
+## 🌟 Main features
+
+### 1. 📁 Two-panel file manager (Total Commander)
+- Classic two-panel interface with quick navigation through system paths (`/opt`, `/opt/etc`, `/tmp`, `/media`, `/`).
+- **Hot keys:**
+  - `Tab`: switch between left and right panels
+  - `F3`: quick file preview
+  - `F4`: built-in full-screen config editor with syntax highlighting and saving by `Ctrl + S`
+  - `F5`: fast copying between panels
+  - `F6`: move / rename
+  - `F7`: creating a new folder
+  - `F8`: deleting files and directories
+  - `F9`: backup to `.tar.gz` or `.zip`
+  - `F10`: change access rights (`chmod`) in the graphics window
+- **Drag-and-Drop:** Drag and drop files from your computer directly into your browser window for instant downloading.
+
+### 2. 💻 Web terminal
+- **CLI terminal:** direct control of the KeeneticOS console (`ndmc` / `(config)>`) with fast system commands (`show version`, `show interface`, `show ip route`, `show log`).
+- **SSH Terminal:** Fully featured Linux console PTY Entware (`/opt/bin/sh`, `/opt/bin/bash`) with full support for colors, hotkeys (`Ctrl+C`, `Ctrl+Z`, `nano`, `mc`, `top`, `htop`).
+
+### 3. 📦 OPKG Package Manager
+- **Repository directory:** view, add and delete custom `.conf` feeds.
+- **Directory of popular repositories:** ready-made pre-installed repositories (Snakelair, AmneziaWG / AWG Manager, Zapret / NFQWS, Sing-Box Naive, Entware Main) with **live search** by names, descriptions and child packages.
+- Install, remove, update packages in 1 click with a live console of OPKG process logs.
+
+### 4. 📊 System and process analyzer
+- Load graphs for CPU, cores, memory, Swap, disk drives and network traffic.
+- Interactive table of processes (`top`/`htop`) with sorting by columns (% CPU, % MEM, PID, RSS), searching and sending signals `SIGTERM` / `SIGKILL`.
+
+### 5. 💾 Backup and Restore
+- Export and restore the complete list of installed OPKG packages.
+- Creation of compressed `.tar.gz` archives of `/opt/etc/` configuration files and their rollback in one click.
+
+### 6. ⚡ Logging to RAM (tmpfs)
+- By default, the Smart-Utils service writes logs to RAM (`/tmp/smart-utils.log`), which completely eliminates wear and tear on the router's flash memory.
+
+---
+
+## 🚀 Installation
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/install.sh | sh -s smart-utils
+curl -sSL https://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/install.sh | sh -s smart-utils
 ```
 
-После установки откройте веб-интерфейс:
-`http://192.168.1.1:8090` (или IP-адрес вашего роутера)
+After installation, open the web interface:
+`http://192.168.1.1:8090` (or your router's IP address)
 
 ---
 
-## 🗑️ Полное удаление Smart-Utils
+## 🗑️ Complete removal of Smart-Utils
 
-### Автоматически (в одну команду):
+### Automatically (in one command):
 ```bash
-curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/uninstall.sh | sh -s smart-utils
+curl -sSL https://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/uninstall.sh | sh -s smart-utils
 ```
 
-### Вручную через SSH:
+### Manually via SSH:
 ```bash
 /opt/etc/init.d/S99smart-utils stop
 killall -9 smart-utils 2>/dev/null

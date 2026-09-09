@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # QuakeLive-VPN Server & Gateway Installer
-# Репозиторий: snakelair/Keenetic (https://github.com/snakelair/Keenetic)
-# ==============================================================================
+# Репозиторий: snakelair/Keenetic (https://github.com/snakelair/Keenetic)# ==============================================================================
 
 set -e
 
@@ -21,8 +20,8 @@ printf "${CYAN}=================================================================
 
 # 1. Check root permissions
 if [ "$(id -u)" -ne 0 ]; then
-    printf "${RED}[ERROR] Скрипт должен быть запущен с правами суперпользователя (root)!${RESET}\n"
-    printf "Пожалуйста, выполните: sudo bash $0\n\n"
+    printf "${RED}[ERROR] The script must be run as superuser (root)!${RESET}\n"
+    printf "Please run: sudo bash $0\n\n"
     exit 1
 fi
 
@@ -37,12 +36,12 @@ case "$RAW_ARCH" in
         ARCH="arm64"
         ;;
     *)
-        printf "${RED}[ERROR] Архитектура %s не поддерживается! Доступны: x86_64 (amd64), aarch64 (arm64).${RESET}\n" "$RAW_ARCH"
+        printf "${RED}[ERROR] Architecture %s is not supported! Available: x86_64 (amd64), aarch64 (arm64).${RESET}\n" "$RAW_ARCH"
         exit 1
         ;;
 esac
 
-printf "${BLUE}[*]${RESET} Архитектура сервера: ${WHITE}%s${RESET} (бинарник: ${GREEN}ql-vpn-linux-%s${RESET})\n" "$RAW_ARCH" "$ARCH"
+printf "${BLUE}[*]${RESET} Server architecture: ${WHITE}%s${RESET} (binary: ${GREEN}ql-vpn-linux-%s${RESET})\n" "$RAW_ARCH" "$ARCH"
 
 # 3. Detect Public IP & WAN Interface
 WAN_IFACE=$(ip route get 8.8.8.8 2>/dev/null | awk '{for(i=1;i<=NF;i++)if($i=="dev")print $(i+1)}')
@@ -59,7 +58,7 @@ if [ -z "$PUBLIC_IP" ]; then
     PUBLIC_IP="127.0.0.1"
 fi
 
-printf "${BLUE}[*]${RESET} Сетевой интерфейс: ${WHITE}%s${RESET}, Внешний IP: ${WHITE}%s${RESET}\n\n" "${WAN_IFACE:-eth0}" "$PUBLIC_IP"
+printf "${BLUE}[*]${RESET} Network interface: ${WHITE}%s${RESET}, External IP: ${WHITE}%s${RESET}\n\n" "${WAN_IFACE:-eth0}" "$PUBLIC_IP"
 
 # 4. Interactive Configuration
 AUTO_MODE=0
@@ -94,10 +93,10 @@ if [ "$AUTO_MODE" -eq 0 ] && [ -t 0 ]; then
     [ -n "$INPUT_PASS" ] && WEB_PASS="$INPUT_PASS"
 fi
 
-printf "\n${BLUE}[*]${RESET} Конфигурация: Сервер UDP ${GREEN}:%s${RESET}, Веб-панель HTTPS ${GREEN}:%s${RESET}\n" "$SERVER_PORT" "$WEB_PORT"
+printf "\n${BLUE}[*]${RESET} Configuration: UDP Server ${GREEN}:%s${RESET}, HTTPS Web Panel ${GREEN}:%s${RESET}\n" "$SERVER_PORT" "$WEB_PORT"
 
 # 5. Install system dependencies
-printf "${BLUE}[*]${RESET} Проверка и установка пакетов (iptables, curl, ca-certificates)...\n"
+printf "${BLUE}[*]${RESET} Checking and installing packages (iptables, curl, ca-certificates)...\n"
 if command -v apt-get >/dev/null 2>&1; then
     apt-get update -qq >/dev/null 2>&1 || true
     DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iptables iptables-persistent curl ca-certificates >/dev/null 2>&1 || \
@@ -111,7 +110,7 @@ elif command -v apk >/dev/null 2>&1; then
 fi
 
 # 6. Enable IPv4 Forwarding & Firewall
-printf "${BLUE}[*]${RESET} Включение IPv4-forwarding и настройка правил iptables...\n"
+printf "${BLUE}[*]${RESET} Enabling IPv4-forwarding and configuring iptables rules...\n"
 mkdir -p /etc/sysctl.d
 echo "net.ipv4.ip_forward = 1" > /etc/sysctl.d/99-qlvpn.conf
 sysctl -p /etc/sysctl.d/99-qlvpn.conf >/dev/null 2>&1 || sysctl -w net.ipv4.ip_forward=1 >/dev/null 2>&1 || true
@@ -142,13 +141,13 @@ if command -v netfilter-persistent >/dev/null 2>&1; then
 fi
 
 # 7. Download QL-VPN Binary from Shared Keenetic Repository
-printf "${BLUE}[*]${RESET} Загрузка исполняемого файла из snakelair/Keenetic...\n"
+printf "${BLUE}[*]${RESET} Loading an executable file from snakelair/Keenetic...\n"
 mkdir -p /etc/ql-vpn /usr/local/bin
 
 systemctl stop ql-vpn 2>/dev/null || true
 killall -9 ql-vpn 2>/dev/null || true
 
-BIN_URL="https://raw.githubusercontent.com/snakelair/Keenetic/main/bin/ql-vpn-linux-${ARCH}"
+BIN_URL="https://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/bin/ql-vpn-linux-${ARCH}"
 FALLBACK_URL="https://github.com/snakelair/SmartVpn/releases/latest/download/ql-vpn_linux_${ARCH}"
 
 rm -f /usr/local/bin/ql-vpn.tmp
@@ -157,7 +156,7 @@ if [ -s /usr/local/bin/ql-vpn.tmp ]; then
     chmod +x /usr/local/bin/ql-vpn.tmp
     mv -f /usr/local/bin/ql-vpn.tmp /usr/local/bin/ql-vpn
 else
-    printf "${YELLOW}[!]${RESET} Репозиторий сырых файлов недоступен, пробую GitHub Releases...\n"
+    printf "${YELLOW}[!]${RESET} The raw files repository is unavailable, I'm trying GitHub Releases...\n"
     curl -sSL -o /usr/local/bin/ql-vpn.tmp "$FALLBACK_URL" || true
     if [ -s /usr/local/bin/ql-vpn.tmp ]; then
         chmod +x /usr/local/bin/ql-vpn.tmp
@@ -166,14 +165,14 @@ else
 fi
 
 if [ ! -s /usr/local/bin/ql-vpn ]; then
-    printf "${RED}[ERROR] Не удалось загрузить бинарник ql-vpn! Проверьте интернет-соединение.${RESET}\n"
+    printf "${RED}[ERROR] Failed to load ql-vpn binary! Check your internet connection.${RESET}\n"
     exit 1
 fi
 
 chmod +x /usr/local/bin/ql-vpn
 
 # 8. Create Systemd Service
-printf "${BLUE}[*]${RESET} Регистрация службы systemd (ql-vpn.service)...\n"
+printf "${BLUE}[*]${RESET} Registering the systemd service (ql-vpn.service)...\n"
 cat << EOF > /etc/systemd/system/ql-vpn.service
 [Unit]
 Description=QuakeLive-VPN Server and Web Control Daemon
@@ -191,7 +190,7 @@ WantedBy=multi-user.target
 EOF
 
 # 9. Generate Initial Client Token
-printf "${BLUE}[*]${RESET} Генерация первого клиентского токена подключения...\n"
+printf "${BLUE}[*]${RESET} Generating the first client connection token...\n"
 TOKEN_OUTPUT=$(/usr/local/bin/ql-vpn token add -server "${PUBLIC_IP}:${SERVER_PORT}" -name "Ranger" -tokens /etc/ql-vpn/tokens.json 2>&1 || true)
 TOKEN_URL=$(echo "$TOKEN_OUTPUT" | grep -o 'qlvpn://[^ ]*' | head -n1 || true)
 
@@ -202,25 +201,25 @@ systemctl restart ql-vpn || true
 sleep 1
 
 if systemctl is-active --quiet ql-vpn; then
-    ACTIVE_STATUS="${GREEN}Работает (Active)${RESET}"
+    ACTIVE_STATUS="${GREEN}Working (Active)${RESET}"
 else
-    ACTIVE_STATUS="${YELLOW}Запущен${RESET}"
+    ACTIVE_STATUS="${YELLOW}Started${RESET}"
 fi
 
 # 11. Final Summary Report
 printf "\n${GREEN}================================================================================${RESET}\n"
-printf "${GREEN}   [OK] QuakeLive-VPN Сервер успешно установлен и запущен!${RESET}\n"
+printf "${GREEN} [OK] QuakeLive-VPN Server successfully installed and running!${RESET}\n"
 printf "${GREEN}================================================================================${RESET}\n\n"
-printf " ${WHITE}Статус службы:${RESET}       %b\n" "$ACTIVE_STATUS"
-printf " ${WHITE}Игровой порт (UDP):${RESET}  ${CYAN}%s${RESET}\n" "$SERVER_PORT"
+printf "${WHITE}Service status:${RESET} %b\n" "$ACTIVE_STATUS"
+printf "${WHITE}Game port (UDP):${RESET} ${CYAN}%s${RESET}\n" "$SERVER_PORT"
 printf " ${WHITE}Веб-админка (HTTPS):${RESET} ${CYAN}https://%s:%s${RESET}\n" "$PUBLIC_IP" "$WEB_PORT"
-printf " ${WHITE}Логин:${RESET}                ${CYAN}admin${RESET}\n"
-printf " ${WHITE}Пароль:${RESET}               ${YELLOW}%s${RESET}\n\n" "$WEB_PASS"
+printf "${WHITE}Login:${RESET} ${CYAN}admin${RESET}\n"
+printf "${WHITE}Password:${RESET} ${YELLOW}%s${RESET}\n\n" "$WEB_PASS"
 
 if [ -n "$TOKEN_URL" ]; then
     printf "${CYAN}--------------------------------------------------------------------------------${RESET}\n"
-    printf " ${YELLOW}🔑 Готовый токен подключения для клиента (Windows / Роутер):${RESET}\n\n"
+    printf "${YELLOW}🔑 Ready connection token for the client (Windows / Router): ${RESET}\n\n"
     printf " ${GREEN}%s${RESET}\n\n" "$TOKEN_URL"
-    printf " Скопируйте эту строку и вставьте в Windows-клиент или в Smart-VPN на роутере.\n"
+    printf "Copy this line and paste it into a Windows client or Smart-VPN on your router.\n"
     printf "${CYAN}--------------------------------------------------------------------------------${RESET}\n\n"
 fi

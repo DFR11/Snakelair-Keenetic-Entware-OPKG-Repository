@@ -1,754 +1,754 @@
-# История изменений SmartVPN
+# SmartVPN change history
 
 ## [1.0.65] - 2026-09-05
-### Исправлено и Улучшено
-- **Защита основного браузера (Google Chrome, Edge, Firefox) от закрытия при выходе из трея Windows**:
-  - Устранена проблема, когда закрытие из трея отправляло системное сообщение `WM_CLOSE` окну Google Chrome с вкладкой конфигуратора, приводя к закрытию всего браузера пользователя со всеми рабочими вкладками.
-  - Внедрена строгая валидация окон в `isDedicatedAppWindow()`: окна обозревателей (`Chrome`, `Edge`, `Firefox`, `Opera`, `Brave`, `Yandex` и др.) полностью исключены из отправки `WM_CLOSE`. Закрываются исключительно выделенные standalone-окна приложения в режиме `--app` (с точным заголовком `QuakeLive-VPN Control Center`).
-  - Для сценария, когда конфигуратор открыт в обычной вкладке браузера (где политика безопасности блокирует принудительный вызов `window.close()`), вкладка переходит в аккуратный спящий режим с экраном «🛑 QuakeLive-VPN завершил работу», полностью останавливая таймеры, фоновые опросы и сохраняя браузер пользователя в полной безопасности.
+### Fixed and Improved
+- **Protecting the main browser (Google Chrome, Edge, Firefox) from closing when exiting the Windows tray**:
+  - Fixed an issue where closing from the tray would send a system message `WM_CLOSE` to a Google Chrome window with a configurator tab, causing the user's entire browser to close with all working tabs.
+  - Strict window validation has been implemented in `isDedicatedAppWindow()`: browser windows (`Chrome`, `Edge`, `Firefox`, `Opera`, `Brave`, `Yandex`, etc.) are completely excluded from sending `WM_CLOSE`. Only selected standalone application windows are closed in the `--app` mode (with the exact title `QuakeLive-VPN Control Center`).
+  - For the scenario where the configurator is opened in a regular browser tab (where the security policy blocks the forced call to `window.close()`), the tab goes into a neat sleep mode with a "🛑 QuakeLive-VPN has completed" screen, completely stopping timers, background polling and keeping the user's browser completely secure.
 
 ## [1.0.64] - 2026-09-05
-### Добавлено и Улучшено
-- **Автоматическое закрытие окна конфигуратора при выходе из системного трея Windows (QL-VPN)**:
-  - Реализовано мгновенное и гарантированное закрытие окна конфигуратора (`http://127.0.0.1:8092`) при нажатии «Выход» в контекстном меню трея, по сигналу завершения процесса или через API `/api/exit`.
-  - Внедрен двухуровневый механизм закрытия:
-    1. **Frontend-событие**: веб-интерфейс подключен к потоку Server-Sent Events (SSE) `/api/events` и отслеживает флаг `app_exiting` в статусе. При получении сигнала о закрытии немедленно вызывается JavaScript `window.close()`, моментально закрывающий приложение в режиме `--app` (Chromium/Edge/Chrome).
-    2. **Win32 Message Pump**: сервер выполняет поиск и закрытие окна конфигуратора через Win32 API (`OpenDesktopW`, `EnumDesktopWindows` / `EnumWindows`, `GetWindowTextW`), отправляя сообщение `WM_CLOSE` (0x0010) окнам с заголовком «QuakeLive-VPN Control Center» и «127.0.0.1:8092».
-  - Добавлено корректное и чистое завершение туннеля (`state.DisconnectTunnel()`): сброс таблицы маршрутизации, удаление интерфейса Wintun и закрытие иконки в трее без зависаний.
+### Added and Improved
+- **Automatic closing of the configurator window when exiting the Windows system tray (QL-VPN)**:
+  - Implemented instant and guaranteed closing of the configurator window (`http://127.0.0.1:8092`) when you click “Exit” in the tray context menu, upon a process completion signal, or via the `/api/exit` API.
+  - A two-level closing mechanism has been introduced:
+    1. **Frontend Event**: The web interface is connected to the Server-Sent Events (SSE) stream `/api/events` and monitors the `app_exiting` flag in the status. When a close signal is received, JavaScript `window.close()` is immediately called, immediately closing the application in `--app` mode (Chromium/Edge/Chrome).
+    2. **Win32 Message Pump**: The server searches and closes the configurator window via the Win32 API (`OpenDesktopW`, `EnumDesktopWindows` / `EnumWindows`, `GetWindowTextW`), sending a message `WM_CLOSE` (0x0010) to windows with the title "QuakeLive-VPN" Control Center" and "127.0.0.1:8092".
+  - Added correct and clean tunnel termination (`state.DisconnectTunnel()`): resetting the routing table, deleting the Wintun interface and closing the tray icon without freezing.
 
 ## [1.0.63] - 2026-09-05
-### Исправлено и Улучшено
-- **Исправление маршрутизации трафика (0.0.0.0/0) в Windows клиенте QL-VPN**:
-  - Реализовано динамическое назначение IP-адреса на Wintun адаптер (`SetIP`) сразу после завершения рукопожатия с сервером. Ранее для токенов с динамическим IP (`assigned_ip: ""`) вызов `netsh set address` пропускался, из-за чего адаптер оставался без адреса и не мог принимать/отправлять трафик.
-  - Исправлен шлюз и привязка маршрутов: маршруты `0.0.0.0/1` и `128.0.0.0/1` теперь направляются на шлюз сервера `10.80.0.1` с обязательным указанием индекса Wintun адаптера (`if <wintunIfIndex>`). Это исключает паразитные ARP-запросы на point-to-point Layer 3 интерфейсе.
-  - Добавлена очистка устаревших маршрутов перед их добавлением для предотвращения конфликтов.
-  - Настройка DNS на Wintun адаптере переведена в безопасный режим с флагом `validate=no`, исключающим зависание `netsh`.
-  - Метрика интерфейса Wintun установлена в значение `1` для гарантированного приоритета туннеля над физическими адаптерами при резолвинге DNS.
-  - Устранена блокировка подсети встроенным сервером на Windows: клиентский GUI больше не запускает локальный сервер `qlsrv0` по умолчанию, освобождая подсеть `10.80.0.0/24` для клиентского туннеля `qlvpn0`.
-- **Автоматический NAT MASQUERADE и IPv4-Forwarding на Linux VPS сервере**:
-  - При запуске сервера `ql-vpn` на Linux ядре теперь автоматически включается `net.ipv4.ip_forward = 1` через `procfs` и `sysctl`.
-  - Добавлена автоматическая конфигурация правил `iptables` NAT MASQUERADE для подсети `10.80.0.0/24` на всех исходящих интерфейсах (`! -d 10.80.0.0/24 -j MASQUERADE`).
-  - Добавлены правила цепочки `FORWARD` для прямого (`-s 10.80.0.0/24`), обратного (`-d 10.80.0.0/24`) и согласованного (`-m conntrack --ctstate RELATED,ESTABLISHED`) трафика.
-  - Обновлены скрипты systemd и развертывания по SSH.
+### Fixed and Improved
+- **Fix traffic routing (0.0.0.0/0) in the Windows QL-VPN client**:
+  - Implemented dynamic assignment of an IP address to the Wintun adapter (`SetIP`) immediately after completing a handshake with the server. Previously, for tokens with a dynamic IP (`assigned_ip: ""`), the call to `netsh set address` was skipped, which left the adapter without an address and unable to receive/send traffic.
+  - The gateway and route binding have been fixed: the routes `0.0.0.0/1` and `128.0.0.0/1` are now routed to the server gateway `10.80.0.1` with the mandatory indication of the adapter's Wintun index (`if <wintunIfIndex>`). This eliminates spurious ARP requests on the point-to-point Layer 3 interface.
+  - Added cleaning of outdated routes before adding them to prevent conflicts.
+  - The DNS setting on the Wintun adapter has been switched to safe mode with the `validate=no` flag, eliminating the `netsh` hang.
+  - The Wintun interface metric is set to `1` to ensure that the tunnel takes precedence over physical adapters when resolving DNS.
+  - Fixed subnet blocking by the built-in server on Windows: the client GUI no longer starts the local `qlsrv0` server by default, freeing up the `10.80.0.0/24` subnet for the `qlvpn0` client tunnel.
+- **Automatic NAT MASQUERADE and IPv4-Forwarding on Linux VPS server**:
+  - When starting the `ql-vpn` server on the Linux kernel, `net.ipv4.ip_forward = 1` is now automatically enabled through `procfs` and `sysctl`.
+  - Added automatic configuration of `iptables` NAT MASQUERADE rules for the `10.80.0.0/24` subnet on all outgoing interfaces (`! -d 10.80.0.0/24 -j MASQUERADE`).
+  - Added `FORWARD` chain rules for forward (`-s 10.80.0.0/24`), reverse (`-d 10.80.0.0/24`) and consistent (`-m conntrack --ctstate RELATED,ESTABLISHED`) traffic.
+  - Updated systemd and SSH deployment scripts.
 
 ## [1.0.62] - 2026-09-05
-### Добавлено и Улучшено
-- **Система самообновления в сервере QL-VPN (только для VPS)**:
-  - Реализован мониторинг версий и автоматическое отображение бейджа «⚡ Доступно: vX.X.X» в шапке панели при появлении новых релизов.
-  - Встроено интерактивное модальное окно с отображением текущей и доступной версий, списком изменений (Changelog diff) и кнопкой «🚀 Обновить сейчас».
-  - Безопасное скачивание свежего бинарника с GitHub для архитектуры сервера (`amd64` / `arm64`), замена исполняемого файла `/usr/local/bin/ql-vpn`, перезапуск службы systemd и живой терминал процесса обновления.
-  - Система самообновления активна исключительно на VPS (Linux), не мешая клиентским сборкам Windows.
-- **Система самообновления в SmartVPN (роутеры Keenetic)**:
-  - Добавлены бейдж версии и пульсирующий бейдж наличия обновлений в шапке веб-интерфейса роутера.
-  - Интегрировано модальное окно с подробным списком изменений между установленной и новой версией в едином стиле экосистемы SmartUtils.
-  - Поддержка быстрого обновления пакета OPKG (`opkg update && opkg install --force-reinstall smart-vpn`) и фонового перезапуска службы `/opt/etc/init.d/S99smart-vpn`.
-  - Запасной механизм прямого скачивания бинарника под архитектуру процессора роутера при отсутствии OPKG-репозитория.
-  - Потоковый терминал обновления и автоматическая перезагрузка страницы после восстановления связи.
+### Added and Improved
+- **Self-updating system in the QL-VPN server (VPS only)**:
+  - Implemented version monitoring and automatic display of the “⚡ Available: vX.X.X” badge in the panel header when new releases appear.
+  - Built-in interactive modal window displaying the current and available versions, a list of changes (Changelog diff) and a “🚀 Update now” button.
+  - Securely download the latest GitHub binary for the server architecture (`amd64` / `arm64`), replace the `/usr/local/bin/ql-vpn` executable, restart the systemd service and live terminal the update process.
+  - The self-updating system is active exclusively on VPS (Linux), without interfering with client Windows builds.
+- **Self-updating system in SmartVPN (Keenetic routers)**:
+  - Added a version badge and a pulsating update badge in the header of the router web interface.
+  - Integrated modal window with a detailed list of changes between the installed and new version in the same style of the SmartUtils ecosystem.
+  - Support for fast update of OPKG package (`opkg update && opkg install --force-reinstall smart-vpn`) and background restart of service `/opt/etc/init.d/S99smart-vpn`.
+  - A backup mechanism for directly downloading a binary for the router processor architecture in the absence of an OPKG repository.
+  - Streaming terminal updates and automatic page reload after connection is restored.
 
 ## [1.0.61] - 2026-09-04
-### Исправлено и Улучшено
-- **Синхронизация и горячая перезагрузка серверных токенов QL-VPN (устранение ошибки рукопожатия)**:
-  - Устранена рассинхронизация хранилищ токенов на сервере: менеджер веб-панели и UDP-сервер теперь разделяют единый объект `TokenStore`. Ранее токены, созданные через веб-интерфейс, сохранялись в отдельный файл и не загружались в работающий демон, из-за чего сервер отклонял подключения созданных клиентов со статусом Quake Live.
-  - Реализован автоматический опрос времени изменения файла базы токенов (`os.Stat` modtime) при каждом обращении: любые токены, добавленные через CLI (`token add`) или отредактированные на диске, мгновенно и без перезапуска процесса загружаются в память.
-  - Добавлено автоматическое объединение соседних файлов токенов (`tokens.json` и `qlvpn-tokens.json`), гарантирующее сохранение всех ранее созданных клиентов.
-  - Улучшена информативность ошибок рукопожатия на клиенте: если сервер отклоняет подключение из-за незарегистрированного токена, клиент выводит точное сообщение вместо общего таймаута.
-  - В скрипте развертывания на VPS генерация первого клиентского токена перенесена до старта службы systemd.
+### Fixed and Improved
+- **Synchronization and hot reboot of QL-VPN server tokens (handshake error fix)**:
+  - Fixed desynchronization of token stores on the server: the web panel manager and the UDP server now share a single object `TokenStore`. Previously, tokens created through the web interface were saved to a separate file and were not loaded into the running daemon, causing the server to reject connections from created clients with Quake Live status.
+  - Implemented automatic polling of the change time of the token database file (`os.Stat` modtime) with each access: any tokens added via the CLI (`token add`) or edited on disk are loaded into memory instantly and without restarting the process.
+  - Added automatic merging of adjacent token files (`tokens.json` and `qlvpn-tokens.json`), ensuring the preservation of all previously created clients.
+  - Improved client handshake error reporting: if the server rejects a connection due to an unregistered token, the client displays the exact message instead of a generic timeout.
+  - In the VPS deployment script, the generation of the first client token was moved before the start of the systemd service.
 
 ## [1.0.60] - 2026-09-04
-### Добавлено и Улучшено
-- **Полноценная маршрутизация трафика на Windows (Wintun TUN + Split Tunneling)**:
-  - Интегрирован высокопроизводительный драйвер TUN-адаптеров Wintun (Microsoft WHQL) без CGO и сторонних внешних зависимостей. Официальные библиотеки `wintun_amd64.dll` и `wintun_arm64.dll` встроены через директиву `//go:embed` исключительно для сборки под Windows (не увеличивая размер бинарников для роутеров).
-  - Реализована безопасная маршрутизация всего трафика (`0.0.0.0/0`) через два сбалансированных префикса `/1` (`0.0.0.0/1` и `128.0.0.0/1`), что предотвращает зацикливание пакетов и сохраняет физический шлюз по умолчанию.
-  - Реализован автоматический поиск физического шлюза по умолчанию через Win32 API `GetBestRoute` (`iphlpapi.dll`) и добавление защитного хостового маршрута до сервера VPN.
-  - Реализована раздельная маршрутизация (Split Tunneling) для указанных пользователем CIDR-подсетей.
-  - Добавлена автоматическая настройка DNS-серверов туннеля (1.1.1.1, 8.8.8.8) и очистка всех добавленных маршрутов при отключении или завершении процесса.
-- **Интеграция с треем Windows и опция «Запускать свернутым»**:
-  - В контекстное меню системного трея Windows добавлен пункт с динамической галочкой `[✓] Запускать свернутым`.
-  - В карточку «Маршрутизация трафика (Split Tunneling)» веб-панели добавлен чекбокс «Запускать свернутым в системный трей Windows».
-  - Состояние опции автоматически сохраняется в локальной конфигурации (`qlvpn_client_settings.json`), синхронизируется между треем и веб-панелью в реальном времени, и предотвращает всплывание окна браузера при автозапуске клиента.
-- **Автоматический запрос UAC-прав администратора**:
-  - При запуске клиента на Windows в GUI или CLI-режиме реализована проверка прав администратора (`OpenProcessToken`, `GetTokenInformation`) и автоматический перезапуск с повышением привилегий (`ShellExecuteW("runas")`) для корректного создания сетевого адаптера и изменения таблицы маршрутизации ОС.
+### Added and Improved
+- **Full traffic routing on Windows (Wintun TUN + Split Tunneling)**:
+  - Integrated high-performance TUN adapter driver Wintun (Microsoft WHQL) without CGO and third-party external dependencies. The official libraries `wintun_amd64.dll` and `wintun_arm64.dll` are built in via the `//go:embed` directive exclusively for building under Windows (without increasing the size of the binaries for routers).
+  - Implemented secure routing of all traffic (`0.0.0.0/0`) through two balanced prefixes `/1` (`0.0.0.0/1` and `128.0.0.0/1`), which prevents packet looping and preserves the default physical gateway.
+  - Implemented automatic search for the default physical gateway via the Win32 API `GetBestRoute` (`iphlpapi.dll`) and adding a protective host route to the VPN server.
+  - Implemented split routing (Split Tunneling) for user-specified CIDR subnets.
+  - Added automatic configuration of tunnel DNS servers (1.1.1.1, 8.8.8.8) and clearing of all added routes when the process is disabled or terminated.
+- **Windows tray integration and “Run minimized” option**:
+  - An item with a dynamic checkbox `[✓] Запускать свернутым` has been added to the Windows system tray context menu.
+  - The “Run minimized to Windows system tray” checkbox has been added to the “Traffic Routing (Split Tunneling)” card of the web panel.
+  - The option state is automatically saved in the local configuration (`qlvpn_client_settings.json`), synchronized between the tray and the web panel in real time, and prevents the browser window from popping up when the client autostarts.
+- **Automatic request for UAC administrator rights**:
+  - When the client is launched on Windows in GUI or CLI mode, administrator rights are checked (`OpenProcessToken`, `GetTokenInformation`) and automatic restart with elevated privileges (`ShellExecuteW("runas")`) is implemented to correctly create a network adapter and change the OS routing table.
 
 ## [1.0.59] - 2026-09-04
-### Добавлено и Исправлено
-- **Поддержка добавления и сохранения множества серверов в «Клиент QL-VPN»**:
-  - Устранена проблема перезаписи серверов: клиентские токены и серверы теперь идентифицируются по составному ключу `(Сервер, Имя клиента)`, что позволяет добавлять неограниченное количество различных серверов даже с одинаковым ником игрока (`Sarge` и др.).
-  - В интерфейсе роутера и автономной панели VPS добавлена кнопка **«➕ Добавить в список»** рядом с кнопкой подключения, позволяющая сохранять серверы в список без немедленного разрыва текущего соединения.
-  - Добавлено постоянное серверное хранилище серверов клиента на роутере (`qlvpn-client-servers.json`) и REST API эндпоинты `GET/POST/DELETE /api/qlvpn/client/servers`.
-  - В карточках сохраненных серверов добавлена возможность редактировать адрес/домен сервера, копировать токен, подключаться и удалять сервер из списка.
-  - Клиентские подключения больше не засоряют белый список токенов локального сервера роутера.
+### Added and Corrected
+- **Support for adding and saving multiple servers in the “QL-VPN Client”**:
+  - The problem of server overwriting has been fixed: client tokens and servers are now identified by the composite key `(Сервер, Имя клиента)`, which allows you to add an unlimited number of different servers even with the same player nickname (`Sarge`, etc.).
+  - In the interface of the router and the standalone VPS panel, a **“➕Add to list”** button has been added next to the connection button, which allows you to save servers to the list without immediately breaking the current connection.
+  - Added persistent server storage of client servers on the router (`qlvpn-client-servers.json`) and REST API endpoints `GET/POST/DELETE /api/qlvpn/client/servers`.
+  - In the cards of saved servers, the ability to edit the server address/domain, copy the token, connect and remove the server from the list has been added.
+  - Client connections no longer pollute the white list of tokens on the router's local server.
 
 ## [1.0.58] - 2026-09-04
-### Исправлено
-- **Исправление синтаксиса JavaScript и работы вкладок в веб-панели VPS**:
-  - Устранена синтаксическая ошибка (отсутствующая закрывающая фигурная скобка в блоке `try/catch` метода `saveServerPort`) во встроенном JavaScript веб-админки QL-VPN (`gui.go`), приводившая к сбою парсинга скрипта браузером и блокировке переключения подвкладок.
-  - Проведена валидация синтаксиса JavaScript через Node.js CLI.
+### Corrected
+- **Fixed JavaScript syntax and tabs in the VPS web panel**:
+  - Fixed a syntax error (missing closing curly brace in the `try/catch` block of the `saveServerPort` method) in the built-in JavaScript of the QL-VPN web admin (`gui.go`), which led to the failure of parsing the script by the browser and blocking the switching of subtabs.
+  - Performed JavaScript syntax validation via the Node.js CLI.
 
 ## [1.0.57] - 2026-09-04
-### Изменено и Улучшено
-- **Реорганизация интерфейсов QuakeLive-VPN на роутере и выделенном сервере**:
-  - В интерфейсе SmartVPN на роутере вкладка переименована из «Сервер на роутере» в «Сервер QL-VPN».
-  - Настройка игрового UDP-порта сервера Quake Live перенесена непосредственно во вкладку «Сервер QL-VPN» с моментальным применением и кнопкой сброса на порт по умолчанию `27960`.
-  - В интерфейсе SmartVPN на роутере удалена лишняя подвкладка «Настройки».
-  - На выделенном сервере (`ql-vpn`) вкладка переименована в «Настройки Панели Управления» и содержит только параметры порта панели управления и пароля веб-интерфейса.
-  - Добавлен API эндпоинт `POST /api/qlvpn/server/port` (и `/api/server/port` на сервере) для динамической смены рабочего UDP-порта.
+### Changed and Improved
+- **Reorganization of QuakeLive-VPN interfaces on the router and dedicated server**:
+  - In the SmartVPN interface on the router, the tab has been renamed from “Server on the router” to “QL-VPN Server”.
+  - The Quake Live server game UDP port setting has been moved directly to the “QL-VPN Server” tab with instant application and a reset button to the default port `27960`.
+  - In the SmartVPN interface on the router, the unnecessary “Settings” subtab has been removed.
+  - On the dedicated server (`ql-vpn`), the tab is renamed to “Control Panel Settings” and contains only the control panel port and web interface password parameters.
+  - Added API endpoint `POST /api/qlvpn/server/port` (and `/api/server/port` on the server) for dynamically changing the working UDP port.
 
 ## [1.0.56] - 2026-09-04
-### Добавлено и Улучшено
-- **Браузер официальных серверов Quake Live из Steam Master Server с замером пинга**:
-  - Реализован автоматический опрос активных публичных серверов Quake Live из глобального каталога Steam Master Server с приоритетом для серверов с живыми игроками и близлежащих регионов.
-  - Встроен сетевой бенчмарк протокола Steam A2S_INFO (`TSource Engine Query` с поддержкой 4-байтового challenge-ответа) со сверхбыстрым параллельным пулом воркеров для замера реальной задержки сети (RTT пинг в миллисекундах).
-  - Результаты автоматически сортируются по возрастанию пинга (минимальная задержка сверху) с кэшированием результатов для снижения нагрузки на сеть.
-  - В интерфейсе веб-админки QL-VPN (`gui.go`) и интерфейсе роутера Keenetic (`index.html` + `qlvpn.js`) добавлена кнопка **🌐 Выбрать из Steam** и модальное окно выбора вышестоящего сервера с живым поиском/фильтрацией, флагами стран, картой, режимом игры, количеством игроков и цветными бейджами пинга.
-  - Выбор сервера в один клик подставляет адрес в поля настройки вышестоящего сервера и активирует проксирование.
-  - В API добавлен маршрут `GET /api/qlvpn/upstream/servers` (с поддержкой параметра `refresh=1` для принудительного повторного замера задержек).
+### Added and Improved
+- **Browser of official Quake Live servers from Steam Master Server with ping measurement**:
+  - Implemented automatic polling of active public Quake Live servers from the global Steam Master Server catalog, with priority for servers with live players and nearby regions.
+  - Built-in Steam A2S_INFO protocol network benchmark (`TSource Engine Query` with support for 4-byte challenge response) with an ultra-fast parallel pool of workers to measure real network latency (RTT ping in milliseconds).
+  - Results are automatically sorted by ascending ping (lowest latency on top) with caching of results to reduce network load.
+  - In the QL-VPN web admin interface (`gui.go`) and the Keenetic router interface (`index.html` + `qlvpn.js`) the **🌐 Select from Steam** button and a modal window for selecting an upstream server with live search/filtering, country flags, map, game mode, number of players and colored badges have been added ping.
+  - Selecting a server in one click substitutes the address into the settings fields of the upstream server and activates proxying.
+  - The `GET /api/qlvpn/upstream/servers` route has been added to the API (with support for the `refresh=1` parameter to force delay re-measurement).
 
 ## [1.0.55] - 2026-09-04
-### Исправлено и Улучшено
-- **Исправление обновления бинарника и гарантированный перезапуск службы на VPS**:
-  - В скрипте удаленной установки `buildRemoteInstallerScript` добавлена остановка существующей службы `systemctl stop ql-vpn` и завершение процессов перед обновлением, что устраняет блокировку файла `Text file busy` (ETXTBSY).
-  - Загрузка бинарника переведена на атомарную замену через временный файл (`ql-vpn.tmp` -> `mv -f`).
-  - Вместо `systemctl enable --now` добавлен явный вызов `systemctl restart ql-vpn`, гарантирующий немедленный запуск обновленной службы с параметрами `-tls` и `-web-pass`.
-  - Все скомпилированные бинарники v1.0.55 синхронизированы в общем репозитории `snakelair/Keenetic`.
+### Fixed and Improved
+- **Binary update fix and guaranteed service restart on VPS**:
+  - In the remote installation script `buildRemoteInstallerScript`, added stopping the existing `systemctl stop ql-vpn` service and ending processes before updating, which eliminates the blocking of the `Text file busy` (ETXTBSY) file.
+  - Binary loading has been switched to atomic replacement via a temporary file (`ql-vpn.tmp` -> `mv -f`).
+  - Instead of `systemctl enable --now`, an explicit call to `systemctl restart ql-vpn` has been added to ensure that the updated service is started immediately with the parameters `-tls` and `-web-pass`.
+  - All compiled v1.0.55 binaries are synchronized in a common repository `snakelair/Keenetic`.
 
 ## [1.0.54] - 2026-09-04
-### Добавлено и Улучшено
-- **Вкладка настроек сервера в веб-админке с возможностью смены портов и пароля**:
-  - В автономную веб-админку QL-VPN (`gui.go`) и интерфейс Keenetic роутера (`index.html`, `qlvpn.js`) добавлена отдельная вкладка **⚙️ Настройки сервера**:
-    - **Игровой UDP-порт**: смена и сохранение порта сервера Quake Live (по умолчанию 27960 UDP) с динамическим перезапуском UDP-сокета на лету.
-    - **Порт веб-админки**: смена порта панели управления (по умолчанию 8091) с автоматическим перенаправлением браузера на новый адрес после сохранения.
-    - **Пароль веб-админки**: установка, смена и удаление пароля для доступа к веб-панели (Basic Auth `admin:<пароль>` и Bearer Token) с кнопкой просмотра (👁️) и генератором стойких случайных паролей (🎲).
-    - **Вышестоящий Quake Live сервер**: настройка и переключение upstream-прокси сервера (`51.195.126.72:27960` или локальная эмуляция).
-  - На удаленных Linux VPS при изменении настроек автоматически обновляется systemd unit-файл `/etc/systemd/system/ql-vpn.service`, вызывается `systemctl daemon-reload` и актуализируются правила межсетевого экрана `iptables` для новых портов.
-  - Авторизация веб-сервера `StartGUIServer` переведена на динамическую валидацию пароля на каждом запросе, мгновенно применяя изменения без перезапуска демона.
-  - В API роутера добавлены эндпоинты `GET /api/qlvpn/settings` и `POST /api/qlvpn/settings` с сохранением параметров в `qlvpn-server.json`.
+### Added and Improved
+- **Server settings tab in the web admin with the ability to change ports and password**:
+  - A separate tab has been added to the QL-VPN standalone web admin (`gui.go`) and the Keenetic router interface (`index.html`, `qlvpn.js`) **⚙️ Server settings**:
+    - **Game UDP Port**: Change and save Quake Live server port (default 27960 UDP) with dynamic UDP socket restart on the fly.
+    - **Web admin port**: change the control panel port (default 8091) with automatic browser redirection to the new address after saving.
+    - **Web admin password**: set, change and delete a password to access the web panel (Basic Auth `admin:<пароль>` and Bearer Token) with a view button (👁️) and a strong random password generator (🎲).
+    - **Upstream Quake Live server**: setting up and switching upstream proxy server (`51.195.126.72:27960` or local emulation).
+  - On remote Linux VPS, when the settings are changed, the systemd unit file `/etc/systemd/system/ql-vpn.service` is automatically updated, `systemctl daemon-reload` is called, and the firewall rules `iptables` are updated for new ports.
+  - Web server authorization `StartGUIServer` has been moved to dynamically validate the password on every request, instantly applying changes without restarting the daemon.
+  - Endpoints `GET /api/qlvpn/settings` and `POST /api/qlvpn/settings` have been added to the router API with parameters saved in `qlvpn-server.json`.
 
 ## [1.0.53] - 2026-09-04
-### Исправлено и Улучшено
-- **Исправление авторизации по паролю при развертывании на VPS по SSH**:
-  - Устранена ошибка `ssh_askpass: exec(/usr/bin/ssh-askpass): No such file or directory` при подключении через OpenSSH с парольной аутентификацией.
-  - Реализован кроссплатформенный динамический хелпер `SSH_ASKPASS` (`.cmd` на Windows, `POSIX sh` на Linux/macOS), корректно и безопасно передающий пароль клиенту `ssh` в неинтерактивном режиме.
-  - На роутере Keenetic добавлено явное распознавание Dropbear-клиента (`/opt/bin/dbclient`), с корректной передачей переменной `DROPBEAR_PASSWORD`.
-  - В параметры OpenSSH добавлены флаги `-o PreferredAuthentications=publickey,password,keyboard-interactive` и корректное перенаправление `UserKnownHostsFile` (в `NUL` на Windows и `/dev/null` на Linux).
+### Fixed and Improved
+- **Password authentication fix when deploying to VPS via SSH**:
+  - Fixed error `ssh_askpass: exec(/usr/bin/ssh-askpass): No such file or directory` when connecting via OpenSSH with password authentication.
+  - Implemented a cross-platform dynamic helper `SSH_ASKPASS` (`.cmd` on Windows, `POSIX sh` on Linux/macOS), correctly and securely transmitting the password to the client `ssh` in non-interactive mode.
+  - On the Keenetic router, explicit recognition of the Dropbear client (`/opt/bin/dbclient`) has been added, with the correct transmission of the `DROPBEAR_PASSWORD` variable.
+  - Added `-o PreferredAuthentications=publickey,password,keyboard-interactive` flags to OpenSSH parameters and correct `UserKnownHostsFile` redirection (to `NUL` on Windows and `/dev/null` on Linux).
 
 ## [1.0.52] - 2026-09-04
-### Добавлено и Улучшено
-- **Развертывание веб-интерфейса сервера на HTTPS (TLS) с защитой паролем**:
-  - В подсистему QL-VPN встроен генератор самоподписанных TLS сертификатов ECDSA P-256 (`internal/qlvpn/tls.go`) со сроком действия 10 лет, работающий на чистой стандартной библиотеке Go (`crypto/tls`, `crypto/x509`, `crypto/ecdsa`) без внешних утилит (openssl) и временных файлов на диске.
-  - Веб-сервер управления `StartGUIServer` поддерживает шифрование HTTPS (`tls.NewListener`) и авторизацию HTTP Basic Auth / Bearer Token по паролю `WebPassword`.
-  - В форму развертывания на VPS («Развернуть на VPS по SSH») добавлено поле пароля веб-админки с кнопкой быстрой генерации надежного случайного пароля (`🎲 Случайный`). При оставлении поля пустым сервер автоматически создает случайный пароль формата `Pass-xxxxxxxx`.
-  - Удаленный systemd-сервис на VPS разворачивается с флагами `-tls -web-pass "$WEB_PASS"`.
-  - После успешного завершения развертывания в карточке результата выводятся прямая HTTPS-ссылка (`https://$HOST:$WEB_PORT`), логин `admin`, сгенерированный пароль с кнопкой копирования, а также токен доступа `qlvpn://`.
-  - В бинарник `ql-vpn` добавлены флаги `-tls`, `-cert`, `-key-file`, `-web-pass` для управления защитой и сертификатами во всех режимах (`-server`, `-web`, `-gui`).
+### Added and Improved
+- **Deployment of the server web interface on HTTPS (TLS) with password protection**:
+  - The QL-VPN subsystem has a built-in generator of self-signed TLS certificates ECDSA P-256 (`internal/qlvpn/tls.go`) with a validity period of 10 years, running on a pure standard Go library (`crypto/tls`, `crypto/x509`, `crypto/ecdsa`) without external utilities (openssl) and temporary files on disk.
+  - The management web server `StartGUIServer` supports HTTPS encryption (`tls.NewListener`) and HTTP Basic Auth / Bearer Token authorization using the password `WebPassword`.
+  - A web admin password field with a button for quickly generating a strong random password (`🎲 Случайный`) has been added to the deployment form on VPS (“Deploy to VPS via SSH”). If you leave the field empty, the server automatically generates a random password in the format `Pass-xxxxxxxx`.
+  - The remote systemd service on the VPS is deployed with the `-tls -web-pass "$WEB_PASS"` flags.
+  - After successful completion of deployment, the result card displays a direct HTTPS link (`https://$HOST:$WEB_PORT`), login `admin`, a generated password with a copy button, and an access token `qlvpn://`.
+  - Flags `-tls`, `-cert`, `-key-file`, `-web-pass` have been added to the `ql-vpn` binary to manage security and certificates in all modes (`-server`, `-web`, `-gui`).
 
 ## [1.0.51] - 2026-09-04
-### Исправлено и Улучшено
-- **Удаление устаревших упоминаний карты `q3dm6`**:
-  - Из веб-интерфейса, автономного GUI, бейджей и системных логов полностью удалены упоминания карты `q3dm6`.
-  - В Quake Live для зондирования `getstatus` установлена официальная стандартная карта `campgrounds` вместо несуществующей в `pak00.pk3` карты `q3dm6`.
-  - Обновлены подсказки режима эмуляции: удалены устаревшие ссылки на «3-строчный баннер с автоотключением 5 сек», тексты согласованы с текущей архитектурой (отклонение подключений со статусом сервера).
+### Fixed and Improved
+- **Removing outdated references to the map `q3dm6`**:
+  - Mentions of the `q3dm6` map have been completely removed from the web interface, standalone GUI, badges and system logs.
+  - In Quake Live, the `getstatus` probe has been installed with the official standard map `campgrounds` instead of the non-existent `pak00.pk3` map `q3dm6`.
+  - Updated emulation mode tooltips: removed outdated links to “3-line banner with auto-shutdown 5 sec”, texts are consistent with the current architecture (rejecting connections with server status).
 
 ## [1.0.50] - 2026-09-04
-### Исправлено и Улучшено
-- **Скрытие консоли для Windows-клиента (`ql-vpn.exe`)**:
-  - Windows-бинарник `ql-vpn.exe` собирается с флагом `-H=windowsgui` (подсистема Windows GUI), исключая автоматическое создание консольного окна (`conhost.exe`) операционной системой при запуске из Проводника или ярлыка.
-  - Добавлена функция `hideConsoleWindow()` с вызовами `GetConsoleWindow()`, `ShowWindow(SW_HIDE)` и `FreeConsole()`, которая гарантированно скрывает и отсоединяет консоль при запуске Windows-клиента в режиме GUI/Tray.
-  - Функция `attachParentConsole()` теперь вызывается строго при явном запуске терминальных утилит (`token`, `-keygen`, `-probe-test`, `-help`), что сохраняет удобство работы из консоли cmd/PowerShell без открытия лишних окон.
-  - Скрипты сборки `build.bat` и `build.ps1` синхронизированы для автоматического выпуска готового `dist/ql-vpn.exe` с флагами GUI.
+### Fixed and Improved
+- **Hide the console for the Windows client (`ql-vpn.exe`)**:
+  - The Windows binary `ql-vpn.exe` is built with the `-H=windowsgui` flag (Windows GUI subsystem), excluding automatic creation of a console window (`conhost.exe`) by the operating system when launched from Explorer or a shortcut.
+  - Added function `hideConsoleWindow()` with calls `GetConsoleWindow()`, `ShowWindow(SW_HIDE)` and `FreeConsole()`, which is guaranteed to hide and detach the console when running a Windows client in GUI/Tray mode.
+  - The `attachParentConsole()` function is now called strictly when terminal utilities are explicitly launched (`token`, `-keygen`, `-probe-test`, `-help`), which preserves the convenience of working from the cmd/PowerShell console without opening unnecessary windows.
+  - Build scripts `build.bat` and `build.ps1` are synchronized to automatically release a completed `dist/ql-vpn.exe` with GUI flags.
 
 ## [1.0.49] - 2026-09-04
-### Добавлено и Улучшено
-- **Эмуляция отклонения подключения "Server is full" через OOB print**:
-  - Исследован механизм отклонения подключений в Quake Live / Quake 3: при переполнении сервера или отказе соединения отправляется Out-Of-Band датаграмма `\xff\xff\xff\xffprint\n<Message>\n`.
-  - При получении `print\n...` клиент Quake Live (`quakelive_steam.exe`) сразу прерывает процесс подключения (`Com_Error(ERR_DROP)`) и выводит текст ошибки в модальном диалоге в игре, полностью исключая задержки и загрузку ресурсов карты (`gamestate`).
-  - В режиме локальной эмуляции (без вышестоящего сервера) сервер отвечает на `connect` статусом сервера в пакете `print\n` и немедленно останавливает сессию.
-- **Таблица «Клиенты» с живым мониторингом статуса, аптайма и скорости**:
-  - Блок «Выданные токены клиентов» переработан в полноценный пульт мониторинга «Клиенты».
-  - Отображение статуса подключения в реальном времени (🟢 В сети / ⚪ Отключен).
-  - Отображение времени в сети (Uptime).
-  - Отображение текущей скорости передачи и приема (↑ UL / ↓ DL в КБ/с и МБ/с), а также суммарного объема переданных данных.
-- **Удаление скорборда активных игроков**:
-  - Из веб-интерфейса удален блок «🏆 Активные игроки на сервере», освобождая место под мониторинг клиентов.
-- **Проксирование на вышестоящий Quake Live сервер**:
-  - Добавлен пресет `🎯 51.195.126.72:27960` в панели управления сервером.
-  - При установленном вышестоящем сервере реальные игроки Quake Live прозрачно перенаправляются на удаленный сервер, а туннели QL-VPN обрабатываются локально.
+### Added and Improved
+- **Emulation of connection rejection "Server is full" via OOB print**:
+  - The mechanism for rejecting connections in Quake Live / Quake 3 has been investigated: when the server is full or the connection fails, an Out-Of-Band datagram `\xff\xff\xff\xffprint\n<Message>\n` is sent.
+  - When receiving `print\n...`, the Quake Live client (`quakelive_steam.exe`) immediately interrupts the connection process (`Com_Error(ERR_DROP)`) and displays the error text in a modal dialog in the game, completely eliminating delays and loading of map resources (`gamestate`).
+  - In local emulation mode (without an upstream server), the server responds to `connect` with the server status in the `print\n` package and immediately stops the session.
+- **Table “Clients” with live monitoring of status, uptime and speed**:
+  - The “Issued client tokens” block has been redesigned into a full-fledged monitoring panel “Clients”.
+  - Real-time connection status display (🟢 Online / ⚪ Offline).
+  - Displaying network time (Uptime).
+  - Displays the current transmission and reception speed (↑ UL / ↓ DL in KB/s and MB/s), as well as the total amount of data transferred.
+- **Deleting the scoreboard of active players**:
+  - The “🏆 Active players on the server” block has been removed from the web interface, freeing up space for client monitoring.
+- **Proxying to an upstream Quake Live server**:
+  - Added `🎯 51.195.126.72:27960` preset to the server control panel.
+  - With an upstream server installed, real Quake Live players are transparently redirected to the remote server and QL-VPN tunnels are handled locally.
 
 ## [1.0.48] - 2026-09-04
-### Добавлено и Улучшено
-- **Компактное 1-строчное сообщение `CS_MESSAGE`**:
-  - Сообщение `CS_MESSAGE` (ConfigString 3) переведено в строгий однострочный формат компактной длины (~33 видимых символа):
-    `^2[ONLINE] ^5SmartVPN :%d ^7| ^5Cl: ^3%d^7/^316` (или `^3[PORT] ...` при конфликте портов).
-  - Строка идеально помещается по длине эталона `^2[ONLINE] ^5SmartVPN Keenetic Server` и передается в первом NetChan пакете через `cs 3` и `print`.
-- **Остановка загрузки до `gamestate`**:
-  - Загрузка останавливается сразу после передачи `CS_MESSAGE`, до отправки тяжелого пакета `svcGamestate`.
-  - Клиент Quake Live не тратит время и ресурсы на загрузку карты, текстур и шейдеров, оставаясь на этапе ожидания.
-  - Сохраняется 5-секундный таймер безопасного штатного завершения сессии с командой `disconnect "password protected server"`.
+### Added and Improved
+- **Compact 1-line message `CS_MESSAGE`**:
+  - Message `CS_MESSAGE` (ConfigString 3) has been converted to a strict single-line format of compact length (~33 visible characters):
+    `^2[ONLINE] ^5SmartVPN :%d ^7|^5Cl: ^3%d^7/^316` (или `^3[PORT] ...` when there is a port conflict).
+  - The string fits perfectly along the length of the `^2[ONLINE] ^5SmartVPN Keenetic Server` reference and is transmitted in the first NetChan packet via `cs 3` and `print`.
+- **Stop loading until `gamestate`**:
+  - The download stops immediately after sending `CS_MESSAGE`, before sending the heavy packet `svcGamestate`.
+  - The Quake Live client does not waste time and resources loading the map, textures and shaders, remaining in the waiting phase.
+  - A 5-second timer is maintained for safe regular termination of the session with the `disconnect "password protected server"` command.
 
 ## [1.0.47] - 2026-09-04
-### Исправлено и Улучшено
-- **Исправление переключения подвкладок QuakeLive-VPN (Клиент / Сервер на роутере / Развернуть на VPS)**:
-  - **Устранение критической ошибки JavaScript (`SyntaxError: Identifier 'statusVal' has already been declared`)**:
-    - В методе `renderStatus()` устранен дублирующийся идентификатор `statusVal` (разграничены переменные `clientStatusVal` для метрик клиента и `srvStatusVal` для метрик сервера).
-    - Ранее данная синтаксическая ошибка приводила к аварийному завершению выполнения файла `qlvpn.js` на стороне браузера, в результате чего объект `QLVpn` не инициализировался, а обработчики переключения `QLVpn.switchSubTab(...)` завершались с ошибкой `ReferenceError: QLVpn is not defined`.
-  - **Глобальный экспорт `window.QLVpn`**:
-    - Добавлен явный экспорт `window.QLVpn = QLVpn` в глобальный контекст браузера для гарантированной доступности из `app.js` и инлайн-обработчиков `onclick`.
+### Fixed and Improved
+- **Fix for switching QuakeLive-VPN sub-tabs (Client / Server on router / Deploy to VPS)**:
+  - **Fix critical JavaScript error (`SyntaxError: Identifier 'statusVal' has already been declared`)**:
+    - In the `renderStatus()` method, the duplicate identifier `statusVal` has been eliminated (the variables `clientStatusVal` for client metrics and `srvStatusVal` for server metrics have been separated).
+    - Previously, this syntax error caused the `qlvpn.js` file to crash on the browser side, resulting in the `QLVpn` object not being initialized and `QLVpn.switchSubTab(...)` switch handlers failing with the error `ReferenceError: QLVpn is not defined`.
+  - **Global export `window.QLVpn`**:
+    - Added explicit export of `window.QLVpn = QLVpn` to the global browser context for guaranteed accessibility from `app.js` and inline handlers `onclick`.
 
 ## [1.0.46] - 2026-09-04
-### Добавлено и Улучшено
-- **Многострочный баннер `CS_MESSAGE` (3 строки) на экране загрузки Quake Live**:
-  - Сообщение `CS_MESSAGE` (индекс 3) структурировано в 3 строки через перевод строки `\n`:
-    - Строка 1: `^2[ONLINE] ^5SmartVPN Keenetic Server` (или `^3[PORT CONFLICT]...`).
-    - Строка 2: `^5Clients: ^3%d^7/^316 ^7| ^3UDP :%d ^7| ^2NetChan Camouflage`.
-    - Строка 3: `^3Status: ^2Protected ^7| ^5Uptime: ^3%s`.
-- **Завершение исследования протокола и таймер отключения через 5 секунд**:
-  - Протокол эмуляции остановлен на экране загрузки после отправки gamestate (без снапшотов мира `svcSnapshot`).
-  - Ровно через 5 секунд сервер отправляет надежную команду `disconnect "password protected server"`, после чего Quake Live возвращается в главное меню с сообщением о защите паролем.
-- **Поддержка вышестоящего сервера Quake Live (Upstream Proxy Server)**:
-  - **Разделение трафика VPN и реальной игры**:
-    - Зашифрованные пакеты VPN-клиентов (`qlv1=` и авторизованные туннели) обрабатываются строго локально на роутере.
-    - Пакеты реальных игроков Quake Live (OOB зонды `getstatus`, `connect`, а также игровые NetChan пакеты) прозрачно перенаправляются на указанный вышестоящий сервер.
-    - Ответные пакеты от вышестоящего сервера транслируются обратно соответствующему клиенту.
-  - **Управление и персистентность**:
-    - Настройка в веб-интерфейсе SmartVPN (карточка "Вышестоящий сервер Quake Live (Upstream Proxy)").
-    - API-эндпоинт `POST /api/qlvpn/server/upstream` для динамического обновления без разрыва VPN-соединений.
-    - CLI-флаг `-upstream <host:port>` для `ql-vpn.exe`.
-    - Автоматическое сохранение в `qlvpn-server.json` и восстановление при перезапуске службы.
-    - При отсутствии вышестоящего сервера работает локальный режим эмуляции с 3-строчным `CS_MESSAGE` и 5-секундным отключением.
+### Added and Improved
+- **Multi-line `CS_MESSAGE` banner (3 lines) on Quake Live loading screen**:
+  - The message `CS_MESSAGE` (index 3) is structured in 3 lines via line feed `\n`:
+    - Line 1: `^2[ONLINE] ^5SmartVPN Keenetic Server` (or `^3[PORT CONFLICT]...`).
+    - Line 2: `^5Clients: ^3%d^7/^316 ^7| ^3UDP :%d ^7| ^2NetChan Camouflage`.
+    - Line 3: `^3Status: ^2Protected ^7| ^5Uptime: ^3%s`.
+- **Complete protocol research and shutdown timer after 5 seconds**:
+  - The emulation protocol is stopped at the loading screen after sending gamestate (without world snapshots `svcSnapshot`).
+  - Exactly 5 seconds later, the server sends the secure command `disconnect "password protected server"`, after which Quake Live returns to the main menu with a message about password protection.
+- **Support for Quake Live Upstream Proxy Server**:
+  - **Separation of VPN traffic and real game**:
+    - Encrypted packets from VPN clients (`qlv1=` and authorized tunnels) are processed strictly locally on the router.
+    - Packets from real Quake Live players (OOB probes `getstatus`, `connect`, as well as in-game NetChan packets) are transparently forwarded to the specified upstream server.
+    - Response packets from the upstream server are broadcast back to the corresponding client.
+  - **Management and persistence**:
+    - Configuration in the SmartVPN web interface (card "Upstream Quake Live server (Upstream Proxy)").
+    - API endpoint `POST /api/qlvpn/server/upstream` for dynamic updates without breaking VPN connections.
+    - CLI flag `-upstream <host:port>` for `ql-vpn.exe`.
+    - Automatic saving to `qlvpn-server.json` and restoration when restarting the service.
+    - In the absence of an upstream server, local emulation mode works with a 3-line `CS_MESSAGE` and a 5-second shutdown.
 
 ## [1.0.45] - 2026-09-04
-### Исправлено и Улучшено
-- **Устранение обрыва соединения Quake Live при переходе в `CA_PRIMED` (Фикс потокового шифра `NetchanEncode`)**:
-  - **Диагностика сбоя `CL_ParseServerMessage: Illegible server message -1`**:
-    - По системному логу клиента Quake Live (`baseq3/error.log`) и дизассемблеру `quakelive_steam.exe` локализована точная причина дисконнекта: при завершении загрузки карты клиент отправляет команду проверки контрольных сумм пакетов `cp 0 <checksums...>`.
-    - В движке id Tech 3 / Quake Live протокол NetChan использует потоковый симметричный шифр, где ключ `key = byte(challenge ^ seq)` динамически мутирует на каждом байте через `key ^= (s << (i & 1))` от текста последней подтверждённой команды клиента (`chan->lastClientCommand`).
-    - Серверный `NetchanEncode` игнорировал `clientCommandString`, шифруя пакеты статическим ключом, из-за чего клиент декодировал байты опкодов как шум и аварийно завершал сессию с `Illegible server message -1`.
-  - **Реализация аутентичного потокового шифра `NetchanEncode`**:
-    - `NetchanEncode` обновлён в точном соответствии с дизассемблером `quakelive_steam.exe` (адрес `0x004bcf44`), гарантируя безупречную взаимную дешифрацию всех keepalive и marquee пакетов.
-  - **Защита лимита памяти Quake Live `MAX_GAMESTATE_CHARS` (16 КБ)**:
-    - Отправка бегущей строки `CS_MESSAGE` заблокирована на время первичной загрузки карты клиентом (`ReliableAcknowledge < 1`), предотвращая накопление очереди команд.
-    - Интервал тикера скорректирован до 1000 мс (комфортная скорость чтения без переполнения буфера `cl.gameState.stringData`).
+### Fixed and Improved
+- **Fix Quake Live connection drop when going to `CA_PRIMED` (Fix stream cipher `NetchanEncode`)**:
+  - **Failure diagnostics `CL_ParseServerMessage: Illegible server message -1`**:
+    - Based on the system log of the Quake Live client (`baseq3/error.log`) and the disassembler `quakelive_steam.exe`, the exact cause of the disconnect is localized: when the card is loaded, the client sends a command to check packet checksums `cp 0 <checksums...>`.
+    - In the id Tech 3 / Quake Live engine, the NetChan protocol uses a symmetric stream cipher, where the key `key = byte(challenge ^ seq)` dynamically mutates on each byte through `key ^= (s << (i & 1))` from the text of the last confirmed client command (`chan->lastClientCommand`).
+    - The server `NetchanEncode` ignored `clientCommandString`, encrypting packets with a static key, which caused the client to decode the opcode bytes as noise and crash the session with `Illegible server message -1`.
+  - **Implementation of authentic stream cipher `NetchanEncode`**:
+    - `NetchanEncode` has been updated in strict accordance with the `quakelive_steam.exe` disassembler (address `0x004bcf44`), guaranteeing flawless mutual decryption of all keepalive and marquee packets.
+  - **Quake Live memory limit protection `MAX_GAMESTATE_CHARS` (16 KB)**:
+    - Sending the `CS_MESSAGE` ticker is blocked during the initial loading of the card by the client (`ReliableAcknowledge < 1`), preventing the accumulation of a command queue.
+    - Ticker interval adjusted to 1000 ms (comfortable read speed without buffer overflow `cl.gameState.stringData`).
 
 ## [1.0.44] - 2026-09-04
-### Добавлено и Улучшено
-- **Потоковая бегущая строка `CS_MESSAGE` и остановка протокола на заглушке экрана загрузки**:
-  - **Бегущая информационная строка (Marquee Ticker)**:
-    - Реализована плавная бегущая строка на экране загрузки клиента Quake Live ("Awaiting snapshot") с интервалом обновления 250 мс (4 символа/сек — комфортная скорость для чтения).
-    - Алгоритм `GenerateMarqueeSlice` токенизирует видимые символы и сохраняет цветовые последовательности Quake (`^0`..`^9`) без разрыва тегов и мерцания.
-    - В бегущей строке циклически транслируется полный статус: `[ONLINE] SmartVPN Keenetic Server | Clients: 1/16 | UDP :27960 | Uptime: 05m:12s | NetChan Camouflage Active`.
-  - **Заглушка протокола на экране загрузки ("Awaiting snapshot")**:
-    - Передача снимка мира (`svcSnapshot`) отключена по запросу пользователя. Протокол удерживает клиента в состоянии `GameClientPrimed` на экране загрузки с активным тикером.
-    - Ответы на пакеты клиента передаются через легковесный keepalive с подтверждением команд.
-  - **Надежная доставка команд сервера Protocol 91 (`BuildReliableCommandsPacket`)**:
-    - Реализована гарантированная доставка команд сервера (`svcServerCommand`) с повторной отправкой неподтвержденных команд (`clientRelAck`), что исключает ошибку клиента `Dropped a reliable command`.
-  - **Устранение запроса доступа брандмауэра Windows при тестах (`ListenIP`)**:
-    - В тестах сервер привязывается исключительно к локальному интерфейсу `127.0.0.1`, что полностью предотвращает появление диалогового окна Windows Defender Firewall для `qlvpn.test`.
+### Added and Improved
+- **Streaming ticker `CS_MESSAGE` and stopping the protocol on the loading screen stub**:
+  - **Marquee Ticker**:
+    - A smooth running line has been implemented on the loading screen of the Quake Live client ("Awaiting snapshot") with an update interval of 250 ms (4 characters/sec - a comfortable reading speed).
+    - The `GenerateMarqueeSlice` algorithm tokenizes visible characters and preserves Quake color sequences (`^0`..`^9`) without tag breaking or flickering.
+    - The full status is cyclically broadcast in the creeping line: `[ONLINE] SmartVPN Keenetic Server | Clients: 1/16 | UDP :27960 | Uptime: 05m:12s | NetChan Camouflage Active`.
+  - **Protocol stub on the loading screen (“Awaiting snapshot”)**:
+    - World snapshot transmission (`svcSnapshot`) has been disabled due to user request. The protocol keeps the client in the `GameClientPrimed` state on the loading screen with an active ticker.
+    - Responses to client packets are transmitted via a lightweight keepalive with command confirmation.
+  - **Reliable delivery of Protocol 91 server commands (`BuildReliableCommandsPacket`)**:
+    - Implemented guaranteed delivery of server commands (`svcServerCommand`) with repeated sending of unconfirmed commands (`clientRelAck`), which eliminates the client error `Dropped a reliable command`.
+  - **Eliminate Windows Firewall access prompt during tests (`ListenIP`)**:
+    - In tests, the server binds exclusively to the local interface `127.0.0.1`, which completely prevents the Windows Defender Firewall dialog from appearing for `qlvpn.test`.
 
 ## [1.0.43] - 2026-09-04
-### Добавлено и Улучшено
-- **Динамический цветной статус сервера и количество клиентов в `CS_MESSAGE`**:
-  - В системную строку конфигурации `CS_MESSAGE` (индекс 3), отображаемую по центру экрана загрузки карты в клиенте Quake Live, интегрирован статус сервера с официальной цветовой разметкой id Tech 3 (`^1`..`^7`):
-    - Статус сервера: `^2[ONLINE]` (зелёный) либо `^3[CONFLICT]` (жёлтый при резервном порте).
-    - Брендинг: `^5SmartVPN Keenetic` (бирюзовый/белый).
-    - Количество активных клиентов: `^5Clients: ^3%d^7/^316` (с подсчётом реальных подключений и скорборда).
-    - Активный UDP-порт и время непрерывной работы (Uptime): `^3UDP :%d ^7| ^5Up: ^3%s`.
-  - Синхронизировано также с приветственным сообщением `CS_MOTD` (индекс 4).
+### Added and Improved
+- **Dynamic color server status and number of clients in `CS_MESSAGE`**:
+  - The system configuration line `CS_MESSAGE` (index 3), displayed in the center of the map loading screen in the Quake Live client, integrates the server status with the official color marking id Tech 3 (`^1`..`^7`):
+    - Server status: `^2[ONLINE]` (green) or `^3[CONFLICT]` (yellow for a backup port).
+    - Branding: `^5SmartVPN Keenetic` (turquoise/white).
+    - Number of active clients: `^5Clients: ^3%d^7/^316` (counting real connections and scoreboard).
+    - Active UDP port and uptime: `^3UDP :%d ^7| ^5Up: ^3%s`.
+  - Synchronized also with the welcome message `CS_MOTD` (index 4).
 
 ## [1.0.42] - 2026-09-04
-### Улучшено и Унифицировано
-- **Полная переверстка карточки сервера QuakeLive-VPN и панелей интерфейса**:
-  - **Визуальная унификация со стилем SmartVPN (Glassmorphism Dark UI)**:
-    - Все контейнеры подвкладок QuakeLive-VPN переведены на стандартный класс `.card-panel` с полупрозрачным фоном, блюром (`backdrop-filter: blur(12px)`), рамками и тенями.
-    - В заголовок карточки сервера добавлен брендовый бейдж `🎮 id Tech 3` (`badge-qlvpn`), аккуратные кнопки статуса, перезапуска и обновления.
-  - **Информативная сетка метрик (Metrics Grid)**:
-    - Добавлены 4 карточки параметров: **Состояние сервера** (с выводом точного Uptime), **UDP Порт** (с индикацией конфликта/запасного порта), **Игроков онлайн** (активные сессии скорборда) и **Выдано токенов**.
-  - **Стилизованный блок подключения и подсказок к консоли игры**:
-    - Панель `#ql-server-port-alert` оформлена в виде акцентного стеклянного баннера с автоматическим определением хоста подключения (LAN IP Keenetic / localhost) и кнопкой быстрого копирования команды `connect <host>:<port>` в буфер обмена в 1 клик.
-  - **Серверный трекинг времени работы (Uptime)**:
-    - В структуру `Server` и `ManagerStatus` добавлена фиксация времени запуска `StartTime` и динамический расчет времени непрерывной работы демона `server_uptime`.
+### Improved and Unified
+- **Complete redesign of the QuakeLive-VPN server card and interface panels**:
+  - **Visual unification with SmartVPN style (Glassmorphism Dark UI)**:
+    - All QuakeLive-VPN subtab containers have been converted to the standard `.card-panel` class with a translucent background, blur (`backdrop-filter: blur(12px)`), borders and shadows.
+    - The `🎮 id Tech 3` (`badge-qlvpn`) brand badge has been added to the server card header, along with neat status, restart and update buttons.
+  - **Metrics Grid**:
+    - Added 4 parameter cards: **Server Status** (with accurate Uptime output), **UDP Port** (with conflict/backup port indication), **Online Players** (active scoreboard sessions) and **Tokens Issued**.
+  - **Stylized block of connections and tips for the game console**:
+    - The `#ql-server-port-alert` panel is designed as an accent glass banner with automatic detection of the connection host (LAN IP Keenetic / localhost) and a button for quickly copying the `connect <host>:<port>` command to the clipboard in 1 click.
+  - **Server uptime tracking**:
+    - The `Server` and `ManagerStatus` structures have been supplemented with recording of the startup time of `StartTime` and dynamic calculation of the continuous operation time of the `server_uptime` daemon.
 
 ## [1.0.41] - 2026-09-04
-### Исправлено и Улучшено
-- **Решена ключевая причина зависания `Awaiting snapshot` (расшифровка команд клиента и подтверждение `relAck`)**:
-  - **Корректная расшифровка полезной нагрузки клиента (`ParseClientPayload`)**:
-    - В сетевом протоколе Quake Live Protocol 91 клиент передает байты заголовка `serverId`, `messageAcknowledge` и `reliableAcknowledge`, за которыми следует 1 байт флагов/сидов (0x80/0x81).
-    - Начиная с байта 12 (`CL_ENCODE_START`) пакет XOR-шифруется ключом `byte(challenge ^ serverId ^ messageAcknowledge)`, мутирующим по символам подтвержденной надежной серверной команды (`lastServerCommand = "priv 0"`).
-    - Ранее парсер не учитывал XOR-шифрование с 12-го байта, не считывал дополнительный байт семени Quake Live и ожидал опкод команды `2` вместо `4` (`clc_clientCommand`). Из-за этого команды `userinfo` и `cp` (checkpoint) отбрасывались, а номер `lastCmdSeq` всегда оставался нулевым.
-  - **Своевременное подтверждение надежных команд клиента в снимках (`relAck`)**:
-    - Сервер теперь корректно считывает номер команды клиента (`cmdSeq = 1` для `userinfo`, `cmdSeq = 2` для `cp`) и немедленно подтверждает его в поле `reliableAcknowledge` снимка мира (`BuildSnapshotPacket`), что позволяет клиенту мгновенно очистить очередь надежных команд и успешно перейти из `CA_PRIMED` ("Awaiting snapshot") в активную фазу игры `CA_ACTIVE`.
-  - **Чистое XOR-шифрование исходящих пакетов сервера (`NetchanEncode`)**:
-    - Согласно анализу дампа реального сервера, исходящие серверные датаграммы Protocol 91 шифруются строго статическим ключом `byte(challenge ^ outgoingSequence)` без модификации строками команд клиента. Устранено паразитное искажение ключа строкой команды.
-### Исправлено и Улучшено
-- **Устранена рассинхронизация номеров последовательностей при загрузке карты**:
-  - **Своевременная отправка снимка сразу после gamestate**:
-    - Сервер теперь отправляет снимок мира `BuildSnapshotPacket` (`seq = 3`) сразу после передачи всех фрагментов `svc_gamestate`, точно как в дампе реального сервера.
-  - **Блокировка флуда номеров последовательности во время загрузки (GameClientPrimed)**:
-    - Ранее воркер `gameClientSnapshotLoop` (20 Hz) непрерывно увеличивал `OutgoingSeq` каждые 50 мс во время загрузки карты клиентом (занимающей ~2.8 секунды), из-за чего номер последовательности убегал на 60 пакетов вперед и клиент терял синхронизацию.
-    - Фоновая отправка 20 Hz переведена строго в состояние `GameClientActive` (после подтверждения загрузки и старта `clc_move`).
+### Fixed and Improved
+- **The key reason for the `Awaiting snapshot` freeze has been resolved (deciphering client commands and confirming `relAck`)**:
+  - **Correct decryption of the client payload (`ParseClientPayload`)**:
+    - In Quake Live Protocol 91 networking, clients send the header bytes `serverId`, `messageAcknowledge`, and `reliableAcknowledge` followed by 1 byte of flags/seeds (0x80/0x81).
+    - Starting from byte 12 (`CL_ENCODE_START`), the packet is XOR-encrypted with the key `byte(challenge ^ serverId ^ messageAcknowledge)`, mutating on the characters of the confirmed reliable server command (`lastServerCommand = "priv 0"`).
+    - Previously, the parser did not take into account XOR encryption from the 12th byte, did not read the additional byte of the Quake Live seed, and expected the command opcode `2` instead of `4` (`clc_clientCommand`). Because of this, the `userinfo` and `cp` (checkpoint) commands were discarded, and the `lastCmdSeq` number always remained zero.
+  - **Timely confirmation of reliable client commands in snapshots (`relAck`)**:
+    - The server now correctly reads the client's command number (`cmdSeq = 1` for `userinfo`, `cmdSeq = 2` for `cp`) and immediately confirms it in the `reliableAcknowledge` field of the world snapshot (`BuildSnapshotPacket`), allowing the client to instantly clear the queue of trusted commands and successfully transition from `CA_PRIMED` ("Awaiting snapshot") into the active phase of the game `CA_ACTIVE`.
+  - **Pure XOR encryption of outgoing server packets (`NetchanEncode`)**:
+    - According to analysis of a real server dump, outgoing Protocol 91 server datagrams are encrypted strictly with the static key `byte(challenge ^ outgoingSequence)` without modification by client command strings. The parasitic corruption of the key by the command line has been eliminated.
+### Fixed and Improved
+- **Fixed desynchronization of sequence numbers when loading a map**:
+  - **Timely sending of the snapshot immediately after gamestate**:
+    - The server now sends a world snapshot to `BuildSnapshotPacket` (`seq = 3`) immediately after transmitting all `svc_gamestate` fragments, just like in a real server dump.
+  - **Blocking flood of sequence numbers during loading (GameClientPrimed)**:
+    - Previously, the `gameClientSnapshotLoop` (20 Hz) worker continuously increased `OutgoingSeq` every 50 ms while the client was loading the card (taking ~2.8 seconds), which caused the sequence number to jump 60 packets ahead and the client to lose synchronization.
+    - Background sending 20 Hz is transferred strictly to the `GameClientActive` state (after confirmation of loading and start of `clc_move`).
 
 ## [1.0.39] - 2026-09-04
-### Исправлено и Улучшено
-- **Устранена причина зависания `Awaiting snapshot` на основе анализа реального сетевого обмена Quake Live**:
-  - **Корректный размер и значение `areamask` (`CL_ParseSnapshot`)**:
-    - В Quake Live Protocol 91 маска видимости областей `areamask` имеет строго размер 1 байт (`0xfd`), а не 2 байта. Передача длины 2 приводила к мгновенному сбросу снимка движком игры с внутренней ошибкой `CL_ParseSnapshot: Invalid size 2 for areamask.`. Исправлено на `len = 1, byte = 0xfd`.
-  - **Аутентичный 541-битный слепок состояния игрока и энтити (`BaseSnapshotPayload`)**:
-    - Заменен 1141-битный слепок на побитово выверенный 541-битный слепок (68 байт) реального сервера Quake Live с правильными флагами `snapFlags = 7` (и `6` в начальном снимке).
-  - **Отправка начального снимка в Packet 1 (`BuildInitialPacket`)**:
-    - Как показал захват реального сервера, первый же пакет подтверждения `seq = 1` содержит не только `svcServerCommand "priv 0"`, но и немедленный начальный `svcSnapshot`, что подготавливает рендерер клиента еще до передачи gamestate.
-  - **Исправление ConfigString 2 (`CS_MUSIC`)**:
-    - Ранее в configstring 2 передавалась версия сервера, что вызывало ошибку `cgame`: `^3WARNING: couldn't open music file SmartVPN-1.ogg`. CS 2 очищен (`""`), а заголовок карты перенесен в `CS_MESSAGE` (3).
+### Fixed and Improved
+- **Fixed the cause of `Awaiting snapshot` freezing based on analysis of real Quake Live network traffic**:
+  - **Correct size and value `areamask` (`CL_ParseSnapshot`)**:
+    - In Quake Live Protocol 91, the area visibility mask `areamask` is strictly 1 byte in size (`0xfd`), not 2 bytes. Passing length 2 caused the game engine to immediately reset the snapshot with an internal error `CL_ParseSnapshot: Invalid size 2 for areamask.`. Corrected to `len = 1, byte = 0xfd`.
+  - **Authentic 541-bit snapshot of the player and entity state (`BaseSnapshotPayload`)**:
+    - Replaced the 1141-bit snapshot with a bit-validated 541-bit snapshot (68 bytes) of the real Quake Live server with the correct `snapFlags = 7` flags (and `6` in the initial snapshot).
+  - **Sending initial snapshot to Packet 1 (`BuildInitialPacket`)**:
+    - As the capture of a real server showed, the very first confirmation packet `seq = 1` contains not only `svcServerCommand "priv 0"`, but also an immediate initial `svcSnapshot`, which prepares the client renderer even before the gamestate is transmitted.
+  - **ConfigString 2 fix (`CS_MUSIC`)**:
+    - Previously, configstring 2 passed the server version, which caused the error `cgame`: `^3WARNING: couldn't open music file SmartVPN-1.ogg`. CS 2 cleared (`""`) and map title moved to `CS_MESSAGE` (3).
 
 ## [1.0.38] - 2026-09-04
-### Добавлено и Улучшено
-- **Индикация занятых портов и реального порта сервера QuakeLive-VPN**:
-  - **Автоматическое обнаружение конфликта портов UDP**:
-    - При попытке запуска сервера на занятом порту (например, стандартном `27960`, когда игра Quake Live уже запущена на машине) система сканирует свободные порты (`27961`–`27970`) и переключается на доступный без аварийного падения.
-    - В структуру `Server` и статус `ManagerStatus` добавлены поля `RequestedPort`, `PortConflict` и `PortConflictReason`.
-  - **Наглядные предупреждения и подсказки во всех интерфейсах**:
-    - В консоль сервера (`ql-vpn.exe` и `smart-vpn`) выводится заметный баннер с точным указанием занятого порта, реального слушающего порта и готовой консольной команды `connect 127.0.0.1:<port>`.
-    - В автономном Web UI (`:8092`) и веб-панели SmartVPN (`:8091`) бэйджи статуса сервера окрашиваются в предупреждающий янтарный цвет с префиксом `⚠️ :<port>`, а под заголовком сервера появляется блок-предупреждение с командой подключения.
-    - Во всплывающей подсказке Windows Tray отображается статус конфликта портов и реальный порт.
+### Added and Improved
+- **Indication of occupied ports and real port of the QuakeLive-VPN server**:
+  - **Auto UDP port conflict detection**:
+    - When you try to start a server on a busy port (for example, the standard `27960`, when Quake Live is already running on the machine), the system scans free ports (`27961`–`27970`) and switches to an available one without crashing.
+    - The fields `RequestedPort`, `PortConflict` and `PortConflictReason` have been added to the structure `Server` and the status `ManagerStatus`.
+  - **Visible warnings and prompts in all interfaces**:
+    - A noticeable banner is displayed in the server console (`ql-vpn.exe` and `smart-vpn`) with an exact indication of the occupied port, the real listening port and the ready-made console command `connect 127.0.0.1:<port>`.
+    - In the standalone Web UI (`:8092`) and SmartVPN web panel (`:8091`), the server status badges are colored amber warning with the prefix `⚠️ :<port>`, and a warning block with a connection command appears under the server title.
+    - The Windows Tray tooltip displays the port conflict status and the actual port.
 
 ## [1.0.37] - 2026-09-04
-### Исправлено и Улучшено
-- **Устранено зависание клиента Quake Live на этапе `Awaiting snapshot`**:
-  - **Генерация и отправка аутентичных снимков мира Protocol 91 (`svcSnapshot = 7`)**:
-    - Ранее после успешной загрузки карты и перехода клиента в состояние `CA_PRIMED` сервер отправлял пустые heartbeat-пакеты (`svcNop`), из-за чего модуль `cgamex86.dll` Quake Live непрерывно отображал надпись *"Awaiting snapshot..."*.
-    - Реализована функция `BuildSnapshotPacket` с генерацией базового снимка (`deltaNum = 0`, монотонный `serverTime`, флаги `snapFlags = 3`, маска областей `areamask = 0xfe, 0xff`, полный слепок `playerstate` и терминатор `packet entities`), воссозданный с побитовой точностью из реального дампового сетевого обмена Quake Live.
-  - **Фоновый цикл отправки снимков (20 Hz Snapshot Loop)**:
-    - В `Server` добавлен фоновый воркер `gameClientSnapshotLoop` (20 Hz / 50 мс), гарантирующий непрерывную доставку снимков состояния мира всем подключенным игровым клиентам даже при потере отдельных UDP пакетов во время загрузки карты.
-  - **Переход клиента в активное состояние (`CA_ACTIVE`)**:
-    - При получении `svcSnapshot` клиент Quake Live очищает состояние `cg.snap == NULL`, мгновенно скрывает экран загрузки и начинает активный рендеринг игрового кадра на карте `campgrounds`, начиная отправку пользовательских команд перемещения (`clc_move`).
+### Fixed and Improved
+- **Fixed Quake Live client hang at `Awaiting snapshot`**:
+  - **Generating and sending authentic snapshots of the Protocol 91 world (`svcSnapshot = 7`)**:
+    - Previously, after the map was successfully loaded and the client entered the `CA_PRIMED` state, the server sent empty heartbeat packets (`svcNop`), which caused the `cgamex86.dll` Quake Live module to continuously display *"Awaiting snapshot..."*.
+    - The `BuildSnapshotPacket` function has been implemented with the generation of a base snapshot (`deltaNum = 0`, monotone `serverTime`, flags `snapFlags = 3`, area mask `areamask = 0xfe, 0xff`, full snapshot `playerstate` and terminator `packet entities`), recreated with bit-precision from a real Quake Live network exchange dump.
+  - **Background loop for sending snapshots (20 Hz Snapshot Loop)**:
+    - A background worker `gameClientSnapshotLoop` (20 Hz / 50 ms) has been added to `Server`, which guarantees continuous delivery of world state snapshots to all connected game clients, even if individual UDP packets are lost during map loading.
+  - **Client transition to active state (`CA_ACTIVE`)**:
+    - Upon receiving `svcSnapshot`, the Quake Live client clears the state of `cg.snap == NULL`, instantly hides the loading screen, and begins actively rendering the game frame on the `campgrounds` map, starting sending custom move commands (`clc_move`).
 
 ## [1.0.36] - 2026-09-04
-### Исправлено и Улучшено
-- **Полная поддержка рукопожатия и gamestate протокола 91 Quake Live (Steam клиент)**:
-  - **Устранено зависание `Awaiting connection...`**:
-    - По протоколу Quake Live сервер обязан немедленно отправить первый дейтаграмм NetChan (Packet 1, `seq = 1`, `svcServerCommand "priv 0"`, `svcEOF`) сразу после подтверждения `connectResponse`. Клиент переходит в состояние `CA_PRIMED` и отвечает подтверждением с `seq = 1`.
-  - **Устранена ошибка `CL_ParseGamestate: bad command byte`**:
-    - Обнаружено и исправлено несовпадение ключей шифрования `CL_Netchan_Decode` (`key := byte(challenge) ^ byte(seq)`): бинарный Steam auth ticket не содержит текстового поля `\challenge\<val>`. Сервер теперь надежно сохраняет выданный `challenge` по IP/порту клиента при обработке `getchallenge` и использует его при регистрации сессии.
-    - В поток `svc_gamestate` внедрена аутентичная схема Protocol 91 с правильными чексуммами файлов `pak00.pk3` (`363034675`) и `bin.pk3` (`2082278750`), версией сервера `1069 linux-x64` и `checksumFeed = 0x00003600`.
-  - **Поддержка фрагментации больших сообщений (`NETFLAG_FRAGMENT 0x80000000`)**:
-    - Реализовано корректное разбиение длинных сообщений gamestate на MTU-безопасные фрагменты по 1300 байт с заголовками смещения и длины.
-  - **Исправлена обработка исчерпания буфера в BitReader**:
-    - Устранено зацикливание `BitReader.ReadByte()` при достижении конца дейтаграммы.
-  - **Устранение конфликта портов в `cmd/ql-vpn`**:
-    - `runServer` теперь запускает единый экземпляр сервера на заданном порту (27960) и передает его в Web Admin/GUI менеджер без создания дублирующих фоновых процессов на порту 27961.
+### Fixed and Improved
+- **Full support for handshake and gamestate protocol 91 Quake Live (Steam client)**:
+  - **Fixed hang `Awaiting connection...`**:
+    - Under the Quake Live protocol, the server must immediately send the first NetChan datagram (Packet 1, `seq = 1`, `svcServerCommand "priv 0"`, `svcEOF`) immediately after confirming `connectResponse`. The client enters the `CA_PRIMED` state and responds with an acknowledgment with `seq = 1`.
+  - **Fixed bug `CL_ParseGamestate: bad command byte`**:
+    - Encryption key mismatch `CL_Netchan_Decode` (`key := byte(challenge) ^ byte(seq)`) has been detected and corrected: the binary Steam auth ticket does not contain the `\challenge\<val>` text field. The server now securely stores the issued `challenge` on the client's IP/port when processing `getchallenge` and uses it when registering a session.
+    - The authentic Protocol 91 scheme with the correct checksums of the files `pak00.pk3` (`363034675`) and `bin.pk3` (`2082278750`) has been implemented into the `svc_gamestate` stream, the server version `1069 linux-x64` and `checksumFeed = 0x00003600`.
+  - **Support for large message fragmentation (`NETFLAG_FRAGMENT 0x80000000`)**:
+    - Implemented correct splitting of long gamestate messages into MTU-safe fragments of 1300 bytes with offset and length headers.
+  - **Fixed handling of buffer exhaustion in BitReader**:
+    - Fixed `BitReader.ReadByte()` loop when reaching the end of the datagram.
+  - **Removing port conflict in `cmd/ql-vpn`**:
+    - `runServer` now launches a single server instance on a given port (27960) and passes it to the Web Admin/GUI manager without creating duplicate background processes on port 27961.
 
 ## [1.0.35] - 2026-09-04
-### Исправлено и Улучшено
-- **Решение проблемы `Awaiting connection...` при подключении Quake Live к `127.0.0.1:27960`**:
-  - **Явная привязка IPv4 UDP сокета (`udp4: 0.0.0.0:27960`) в `internal/qlvpn/server.go`**:
-    - Обнаружена и устранена фундаментальная особенность сетевого стека Windows Winsock: при вызове `net.ListenUDP("udp", ...)` с `nil` IP среда Go по умолчанию создавала сокет `AF_INET6` (`[::]:27960`). Ядро Windows не доставляло входящие IPv4 loopback UDP-дейтаграммы от 32-битного клиента Quake Live (`quakelive_steam.exe`) на сокет `AF_INET6`, из-за чего клиент бесконечно ожидал ответа на `getchallenge` (`Awaiting connection...`).
-    - Сервер теперь гарантированно открывает основной IPv4 сокет `0.0.0.0:27960` (`udp4`), а также опциональный IPv6 сокет (`udp6`), обеспечивая 100% совместимость со всеми типами клиентов и ОС.
-  - **Симметричная маршрутизация ответов клиентам**:
-    - Все ответы (`challengeResponse`, `connectResponse`, `svc_gamestate`, `svc_nop`, пакеты VPN-туннеля) отправляются строго через тот сокет (`conn`), через который пришел запрос клиента, исключая несоответствие адресов отправителя.
-  - **Добавлен REST API эндпоинт `/api/exit`**:
-    - Позволяет корректно завершать процесс GUI/Web Control Center по HTTP-запросу.
+### Fixed and Improved
+- **Solution to `Awaiting connection...` problem when connecting Quake Live to `127.0.0.1:27960`**:
+  - **Explicit IPv4 UDP socket binding (`udp4: 0.0.0.0:27960`) to `internal/qlvpn/server.go`**:
+    - A fundamental feature of the Windows Winsock networking stack was discovered and fixed: when calling `net.ListenUDP("udp", ...)` from `nil` IP, Go created a socket `AF_INET6` (`[::]:27960`) by default. The Windows kernel was not delivering incoming IPv4 loopback UDP datagrams from the 32-bit Quake Live client (`quakelive_steam.exe`) to socket `AF_INET6`, causing the client to wait indefinitely for a response to `getchallenge` (`Awaiting connection...`).
+    - The server is now guaranteed to open the main IPv4 socket `0.0.0.0:27960` (`udp4`), as well as the optional IPv6 socket (`udp6`), ensuring 100% compatibility with all types of clients and OS.
+  - **Symmetric routing of responses to clients**:
+    - All responses (`challengeResponse`, `connectResponse`, `svc_gamestate`, `svc_nop`, VPN tunnel packets) are sent strictly through the socket (`conn`) through which the client request came, excluding mismatches of sender addresses.
+  - **Added REST API endpoint `/api/exit`**:
+    - Allows you to correctly terminate the GUI/Web Control Center process via an HTTP request.
 
 ## [1.0.34] - 2026-09-04
-### Исправлено и Улучшено
-- **Автоматический запуск виртуального сервера Quake Live (UDP 27960) при старте**:
-  - **Автозапуск сервера "из коробки" в `internal/qlvpn/manager.go`**:
-    - Устранено зависание клиента Quake Live на этапе `Awaiting connection...` при подключении `connect 127.0.0.1`.
-    - Ранее при отсутствии файла конфигурации сервера (`qlvpn-server.json`) и отсутствии сохраненных токенов флаг `shouldStart` оставался `false`, из-за чего UDP-порт 27960 не открывался. Теперь сервер по умолчанию запускается автоматически при первом старте сервиса на `DefaultPort` (27960).
-    - Устранена 1-секундная задержка старта сокета: привязка UDP сокета теперь выполняется мгновенно и синхронно при инициализации менеджера.
-  - **Надежное определение директории данных (`data`) на Windows**:
-    - Добавлено автоматическое разрешение пути к каталогу `data/` относительно исполняемого файла (`os.Executable()`) в `NewManager` и `NewGUIState`, что исключает проблемы создания конфигурационных файлов при запуске из ярлыков, других рабочих папок или проводника.
-  - **Информативное логирование в консоль и веб-интерфейс**:
-    - В режимах GUI и Web в консоли и в журнал веб-панели выводятся подсказки о готовности виртуального сервера к подключению: `Quake Live Virtual Server listening on UDP :27960 (connect 127.0.0.1)`.
+### Fixed and Improved
+- **Automatic start of the Quake Live virtual server (UDP 27960) at startup**:
+  - **Server autostart "out of the box" in `internal/qlvpn/manager.go`**:
+    - Fixed Quake Live client hanging at `Awaiting connection...` when connecting to `connect 127.0.0.1`.
+    - Previously, if there was no server configuration file (`qlvpn-server.json`) and no saved tokens, the `shouldStart` flag remained `false`, causing UDP port 27960 to not open. Now the server starts automatically by default the first time the service starts on `DefaultPort` (27960).
+    - The 1-second socket start delay has been eliminated: UDP socket binding is now instantaneous and synchronous when the manager is initialized.
+  - **Reliable definition of the data directory (`data`) on Windows**:
+    - Added automatic path resolution to the `data/` directory relative to the executable file (`os.Executable()`) in `NewManager` and `NewGUIState`, which eliminates the problem of creating configuration files when launched from shortcuts, other working folders or Explorer.
+  - **Informative logging to the console and web interface**:
+    - In GUI and Web modes, hints about the readiness of the virtual server for connection are displayed in the console and in the web panel log: `Quake Live Virtual Server listening on UDP :27960 (connect 127.0.0.1)`.
 
 ## [1.0.33] - 2026-09-04
-### Добавлено и Улучшено
-- **Централизованная система баг-репортов и автодиагностики (интеграция со SmartUtils и snakelair/Keenetic)**:
-  - **Бэкенд на стандартной библиотеке Go (`internal/api/bugreport.go`)**:
-    - Модуль сбора автодиагностики и системной телеметрии: автоопределение модели Keenetic роутера (`/tmp/ndm/sysinfo`, `ndmq`, `summary.RouterModel`), архитектуры Entware (`mipsel-3.4`, `armv7-3.2`, `aarch64-3.10`, `x86_64`), версии ядра Linux / KeeneticOS (`/proc/version`, `uname -sr`), ресурсов RAM (`/proc/meminfo`) и дисковых разделов (`df -h`).
-    - Опрос состояния служб экосистемы: `smart-vpn` (self), `sing-box` (PID, порт Clash API 9090), `ql-vpn` (UDP 27960, статус сервера), `smart-utils` (8090), `smart-route` (8088), `smart-photo` (8089), `crond`, а также сводки активных VPN-соединений KeeneticOS (WireGuard / AWG / SSTP).
-    - Опрос конфигурации репозиториев OPKG (`/opt/etc/opkg.conf`, `/opt/etc/opkg/*.conf`).
-    - Умная многоуровневая санитизация журналов: сбор последних 40 строк из кольцевого буфера памяти `logger.Get().GetHistory()`, файлов логов или `logread` со строгим маскированием паролей, токенов сессий, hex-хэшей и закрытых ключей WireGuard / AmneziaWG (Curve25519 Base64).
-    - Автоматическая генерация предзаполненных ссылок для создания Issue на GitHub (`snakelair/Keenetic/issues/new`), в сообщество Telegram и форум Keenetic.
-    - Регистрация REST API эндпоинтов: `POST/GET /api/doctor/bugreport` и `POST/GET /api/bugreport`.
-  - **Веб-интерфейс (Vanilla JS + Glassmorphism Dark UI)**:
-    - Модальное окно `#modal-bug-report` с интерактивными чипами выбора проектов (`smart-vpn`, `smart-route`, `smart-utils`, `smart-photo`, `keenetic-repo`) и типов обращений (`bug`, `enhancement`, `question`).
-    - Динамический расчет и отображение бейджей: модель роутера, объем и занятость RAM, число активных служб экосистемы, количество строк лога.
-    - Автоматический сбор автодиагностики с дебаунсом при вводе заголовка и описания проблемы.
-    - Кнопка вызова `🐞 Баг-репорт` в шапке панели (`header-status`) и карточка поддержки сообщества в разделе «Настройки».
-    - Кнопка быстрого копирования форматированного Markdown-отчета в буфер обмена и переход к созданию GitHub Issue.
-  - **Модульные тесты (`internal/api/bugreport_test.go`)**:
-    - Тестирование генерации Markdown-отчета и ссылок GitHub Issue (`TestGenerateBugReport`).
-    - Тестирование санитизации паролей, токенов, ключей WireGuard PrivateKey и PSK (`TestSanitizeLogContent`).
+### Added and Improved
+- **Centralized system of bug reports and auto-diagnostics (integration with SmartUtils and snakelair/Keenetic)**:
+  - **Backend using the Go standard library (`internal/api/bugreport.go`)**:
+    - Autodiagnostics and system telemetry collection module: auto-detection of Keenetic router model (`/tmp/ndm/sysinfo`, `ndmq`, `summary.RouterModel`), Entware architecture (`mipsel-3.4`, `armv7-3.2`, `aarch64-3.10`, `x86_64`), Linux / KeeneticOS kernel version (`/proc/version`, `uname -sr`), RAM resources (`/proc/meminfo`) and disk partitions (`df -h`).
+    - Ecosystem services status poll: `smart-vpn` (self), `sing-box` (PID, Clash API port 9090), `ql-vpn` (UDP 27960, server status), `smart-utils` (8090), `smart-route` (8088), `smart-photo` (8089), `crond`, as well as summaries of active KeeneticOS VPN connections (WireGuard / AWG / SSTP).
+    - Poll OPKG repository configurations (`/opt/etc/opkg.conf`, `/opt/etc/opkg/*.conf`).
+    - Smart multi-level log sanitization: collecting the last 40 lines from the circular memory buffer `logger.Get().GetHistory()`, log files or `logread` with strict masking of passwords, session tokens, hex hashes and WireGuard / AmneziaWG (Curve25519 Base64) private keys.
+    - Automatic generation of pre-filled links for creating an Issue on GitHub (`snakelair/Keenetic/issues/new`), in the Telegram community and the Keenetic forum.
+    - Registration of REST API endpoints: `POST/GET /api/doctor/bugreport` and `POST/GET /api/bugreport`.
+  - **Web interface (Vanilla JS + Glassmorphism Dark UI)**:
+    - Modal window `#modal-bug-report` with interactive chips for selecting projects (`smart-vpn`, `smart-route`, `smart-utils`, `smart-photo`, `keenetic-repo`) and types of requests (`bug`, `enhancement`, `question`).
+    - Dynamic calculation and display of badges: router model, RAM volume and occupancy, number of active ecosystem services, number of log lines.
+    - Automatic collection of autodiagnostics with debounce when entering the title and description of the problem.
+    - Call button `🐞 Баг-репорт` in the panel header (`header-status`) and a community support card in the “Settings” section.
+    - A button to quickly copy a formatted Markdown report to the clipboard and proceed to creating a GitHub Issue.
+  - **Unit tests (`internal/api/bugreport_test.go`)**:
+    - Testing the generation of Markdown report and GitHub Issue links (`TestGenerateBugReport`).
+    - Testing sanitization of passwords, tokens, WireGuard PrivateKeys and PSKs (`TestSanitizeLogContent`).
 
 ## [1.0.32] - 2026-09-04
-### Исправлено и Оптимизировано
-- **Устранение зависания клиента Quake Live на этапе `Awaiting connection...` и сброса после `FS_Startup`**:
-  - **Дизассемблирование и реверс-инжиниринг обработки `connectResponse` (`0x004bb540`) и `NET_CompareBaseAdr` (`0x004d6560`)**:
-    - Выяснено, что клиент Quake Live `quakelive_steam.exe` при получении `connectResponse` валидирует совпадение базового сетевого адреса `from` с адресом назначения `clc.serverAddress`.
-    - Устранено блокирование UDP-порта 27960 зависшим процессом, предотвращавшее доставку пакетов ответа на `127.0.0.1`.
-  - **Автоматическая установка карты `campgrounds` для Quake Live (протокол 91)**:
-    - Обнаружено, что в официальном архиве `pak00.pk3` Quake Live классическая карта `q3dm6` отсутствует и заменена на `maps/campgrounds.bsp`. Отправка в ConfigString 0 карты `mapname\q3dm6` приводила к аварийному отключению клиента сразу после `FS_Startup` (`Disconnected from server`).
-    - В `BuildGamestatePacket` реализована автоматическая подстановка карты `campgrounds` для протокола >= 90.
-  - **Надежная ретрансмиссия пакета `svc_gamestate`**:
-    - Добавлена повторная отправка пакета начального состояния `svc_gamestate` при получении повторных клиентских пакетов с `seq <= 1`, гарантирующая переход клиента в статус загрузки карты даже при сетевых потерях UDP.
-  - **Поддержка динамического порта 0 в `NewServer`**:
-    - Сервер теперь поддерживает `port = 0` для автоматического назначения динамического UDP-порта ОС, исключая конфликты портов при локальной отладке и тестировании.
-  - **Сквозной интеграционный тест `TestFullQuakeLiveClientFlow`**:
-    - Добавлен полный тест в `gamestate_test.go`, эмулирующий поведение Quake Live Steam клиента от `getchallenge` до загрузки карты и команд `new` за 0.08 с.
+### Fixed and Optimized
+- **Fix for Quake Live client freezing at `Awaiting connection...` stage and resetting after `FS_Startup`**:
+  - **Disassembly and reverse engineering of processing `connectResponse` (`0x004bb540`) and `NET_CompareBaseAdr` (`0x004d6560`)**:
+    - It has been discovered that the Quake Live client `quakelive_steam.exe` upon receiving `connectResponse` validates that the base network address `from` matches the destination address `clc.serverAddress`.
+    - Fixed blocking of UDP port 27960 by a hung process, preventing delivery of response packets to `127.0.0.1`.
+  - **Automatic installation of the `campgrounds` card for Quake Live (protocol 91)**:
+    - It has been discovered that in the official `pak00.pk3` Quake Live archive the classic map `q3dm6` is missing and replaced with `maps/campgrounds.bsp`. Sending the `mapname\q3dm6` card to ConfigString 0 caused the client to crash immediately after `FS_Startup` (`Disconnected from server`).
+    - `BuildGamestatePacket` implements automatic substitution of the `campgrounds` card for protocol >= 90.
+  - **Reliable retransmission of the package `svc_gamestate`**:
+    - Added re-sending of the initial `svc_gamestate` packet when receiving repeated client packets from `seq <= 1`, ensuring that the client enters the card loading status even with UDP network losses.
+  - **Support for dynamic port 0 in `NewServer`**:
+    - The server now supports `port = 0` to automatically assign a dynamic OS UDP port, eliminating port conflicts during local debugging and testing.
+  - **End-to-end integration test `TestFullQuakeLiveClientFlow`**:
+    - Added a full test to `gamestate_test.go`, emulating the behavior of the Quake Live Steam client from `getchallenge` to loading the map and commands `new` in 0.08 s.
 
-### Исправлено и Оптимизировано
-- **Устранение ошибки `CL_ParseGamestate: bad command byte` в клиенте Steam Quake Live**:
-  - **Дизассемблирование и точный реверс-инжиниринг `quakelive_steam.exe`**:
-    - Обнаружен точный цикл чтения команд пакета `svc_gamestate` по адресу `0x004bd790`, допускающий только опкоды `svc_configstring (3)`, `svc_baseline (4)` и завершающий `svc_EOF (8)`.
-    - Обнаружена функция `CL_Netchan_Decode` по адресу `0x004bcef0`, демаскирующая поток начиная с байта 8 с использованием строки из циклического буфера надежных команд `clc.reliableCommands[reliableAcknowledge & 63]`.
-  - **Исправление `reliableAcknowledge` в пакетах сервера (`svc_gamestate` и `keepalive`)**:
-    - Устранена критическая ошибка отправки `client.IncomingSeq` (1) в поле `reliableAcknowledge`. Клиент при старте еще не отправлял надежных команд (`reliableSequence = 0`), поэтому обращение по индексу 1 приводило к чтению неинициализированной строки и искажению ключей дешифрования Хаффмана для всех последующих байт.
-    - Введено строгое отслеживание `ReliableAcknowledge` и `LastClientCommand` в сессии клиента, равное 0 на момент подключения и обновляемое только при получении `clc_clientCommand` от клиента.
-  - **Детерминированная сортировка ConfigStrings**:
-    - Исключена случайная итерация словаря Go при генерации пакета: строки конфигурации передаются строго отсортированными по индексам (`CS_SERVERINFO`, `CS_SYSTEMINFO`, `CS_GAMEVERSION`, `CS_LEVELSTARTTIME`, `CS_MOTD`, `CS_WARMUP`, `CS_SCORES1`, `CS_SCORES2`, `CS_PLAYERS`).
-  - **Интеграция официальной частотной таблицы Хаффмана Quake Live**:
-    - Проверена и подтверждена аутентичная 256-элементная частотная таблица `msg_hData` из секции `.rdata` бинарника `quakelive_steam.exe` (`0x00542790`).
+### Fixed and Optimized
+- **Fixing the `CL_ParseGamestate: bad command byte` error in the Steam Quake Live client**:
+  - **Disassembly and precise reverse engineering `quakelive_steam.exe`**:
+    - An exact command read cycle of packet `svc_gamestate` at address `0x004bd790` was detected, allowing only opcodes `svc_configstring (3)`, `svc_baseline (4)` and terminating `svc_EOF (8)`.
+    - The function `CL_Netchan_Decode` was found at the address `0x004bcef0`, unmasking the stream starting from byte 8 using a line from the circular buffer of reliable commands `clc.reliableCommands[reliableAcknowledge & 63]`.
+  - **Fix `reliableAcknowledge` in server packages (`svc_gamestate` and `keepalive`)**:
+    - Fixed a critical error sending `client.IncomingSeq` (1) in the `reliableAcknowledge` field. At startup, the client had not yet sent reliable commands (`reliableSequence = 0`), so accessing at index 1 resulted in reading an uninitialized string and corrupting the Huffman decryption keys for all subsequent bytes.
+    - Introduced strict tracking of `ReliableAcknowledge` and `LastClientCommand` in the client session, equal to 0 at the time of connection and updated only when `clc_clientCommand` is received from the client.
+  - **Deterministic sorting ConfigStrings**:
+    - No random iteration of the Go dictionary when generating a package: configuration lines are passed strictly sorted by indexes (`CS_SERVERINFO`, `CS_SYSTEMINFO`, `CS_GAMEVERSION`, `CS_LEVELSTARTTIME`, `CS_MOTD`, `CS_WARMUP`, `CS_SCORES1`, `CS_SCORES2`, `CS_PLAYERS`).
+  - **Quake Live official Huffman frequency table integration**:
+    - The authentic 256-element frequency table `msg_hData` from the `.rdata` section of the `quakelive_steam.exe` (`0x00542790`) binary has been checked and confirmed.
 
 ## [1.0.30] - 2026-09-04
-### Исправлено и Оптимизировано
-- **Устранение ошибки `CL_ParseServerMessage: Illegible server message 123` в клиенте Quake Live**:
-  - **Исправление маскирования пакетов `SV_Netchan_Encode` и `CL_Netchan_Decode`**:
-    - В сетевом протоколе id Tech 3 / Quake Live клиент автоматически демаскирует входящие пакеты с помощью операции XOR начиная с байта 8 (байт 4 полезной нагрузки), используя ключ `key = byte(challenge ^ outgoingSequence)`.
-    - Реализована функция `NetchanEncode`, корректно применяющая оригинальное id Tech 3 маскирование перед отправкой пакетов `svc_gamestate` и `svc_nop/keepalive`.
-  - **Восстановление 4-байтового формата заголовка NetChan**:
-    - Устранено ошибочное добавление 4 байт `NETCHAN_GENCHECKSUM` в поток для Quake Live (данное поле используется исключительно в форке ioquake3, а в оригинальном клиенте id Software Quake Live заголовок всегда состоит строго из 4 байт `OutgoingSequence`).
-    - Устранено смещение полезной нагрузки, приводившее к десинхронизации потока Хаффмана.
-  - **Исправление эталонной частотной таблицы Хаффмана `msgHData`**:
-    - Исправлены частотные веса символов от индекса 99 (`'c'`) до 255 в `internal/qlvpn/huffman.go`, полностью синхронизировав таблицу с официальным кодом `code/qcommon/msg.c` id Tech 3.
-  - **Корректный 6-байтовый парсинг клиентских NetChan-пакетов**:
-    - Заголовок клиентских пакетов зафиксирован на 6 байтах (`OutgoingSequence` [4 байта] + `qport` [2 байта]) с последующим демаскированием полезной нагрузки по формуле `challenge ^ serverId ^ messageAcknowledge`.
+### Fixed and Optimized
+- **Fixing the `CL_ParseServerMessage: Illegible server message 123` error in the Quake Live client**:
+  - **Fix masking of `SV_Netchan_Encode` and `CL_Netchan_Decode`** packets:
+    - In the id Tech 3/Quake Live network protocol, the client automatically unmasks incoming packets by XORing starting byte 8 (payload byte 4) using the `key = byte(challenge ^ outgoingSequence)` key.
+    - The `NetchanEncode` function has been implemented, which correctly applies the original Tech 3 id masking before sending the `svc_gamestate` and `svc_nop/keepalive` packets.
+  - **Recovery of 4-byte NetChan header format**:
+    - Fixed the erroneous addition of 4 bytes `NETCHAN_GENCHECKSUM` to the stream for Quake Live (this field is used exclusively in the ioquake3 fork, and in the original id Software Quake Live client the header always consists of strictly 4 bytes `OutgoingSequence`).
+    - Fixed payload offset causing Huffman stream desynchronization.
+  - **Huffman reference frequency table correction `msgHData`**:
+    - Corrected frequency weights of characters from index 99 (`'c'`) to 255 in `internal/qlvpn/huffman.go`, completely synchronizing the table with the official `code/qcommon/msg.c` id Tech 3 code.
+  - **Correct 6-byte parsing of client NetChan packets**:
+    - The client packet header is fixed at 6 bytes (`OutgoingSequence` [4 bytes] + `qport` [2 bytes]) followed by payload unmasking using the formula `challenge ^ serverId ^ messageAcknowledge`.
 
 ## [1.0.29] - 2026-09-04
-### Исправлено и Оптимизировано
-- **Исправление кодировки и окончаний строк во всех командных файлах Windows (`.bat` / `.cmd`)**:
-  - Все пакетные файлы (`build.bat`, `build_all.bat`, `deploy_to_router.bat`, `git_menu.bat`, `git_status.bat`, `.deploy_profile.cmd`) приведены к строгому стандарту **CRLF (`\r\n`)** и **UTF-8 без BOM**.
-  - Устранена критическая ошибка парсера `cmd.exe`, вызывавшая сдвиг указателя чтения строк при Unix LF окончаниях (ошибки `'hcp'`, `'tlocal'`, `'tle'`, `'cho'`, `'EM'`).
-  - Устранен вывод символов перенаправления потока `->` в командах `echo`, приводивший к случайному созданию файла `Building`.
-  - Добавлен файл `.gitattributes` с правилом `eol=crlf` для всех `*.bat` и `*.cmd`, предотвращающий случайную конвертацию строк в LF при коммитах и клонировании.
-  - Поддержка неинтерактивного запуска `build.bat 1` и `build_all.bat 1` без блокирующих пауз в автоматических скриптах сборки.
+### Fixed and Optimized
+- **Correct encoding and line endings in all Windows batch files (`.bat` / `.cmd`)**:
+  - All batch files (`build.bat`, `build_all.bat`, `deploy_to_router.bat`, `git_menu.bat`, `git_status.bat`, `.deploy_profile.cmd`) are brought to the strict standard **CRLF (`\r\n`)** and **UTF-8 without BOM**.
+  - A critical parser error `cmd.exe` has been fixed, which caused a shift in the line reading pointer for Unix LF endings (errors `'hcp'`, `'tlocal'`, `'tle'`, `'cho'`, `'EM'`).
+  - Fixed the output of `->` stream redirection symbols in `echo` commands, causing the file `Building` to be accidentally created.
+  - Added `.gitattributes` file with `eol=crlf` rule for all `*.bat` and `*.cmd`, preventing accidental conversion of strings to LF during commits and cloning.
+  - Support for non-interactive launch of `build.bat 1` and `build_all.bat 1` without blocking pauses in automatic build scripts.
 
 ## [1.0.28] - 2026-09-04
-### Добавлено и Улучшено
-- **Уровень 1: Виртуальный сервер Quake Live / Quake 3 (подключение и загрузка карты)**:
-  - **Нативная реализация сетевого протокола id Tech 3 на чистом Go**:
-    - Адаптивное кодирование Хаффмана (Sayood Adaptive Huffman Coding) с оригинальной частотной таблицей `msgHData` id Tech 3 (256 символов) без сторонних C/C++ зависимостей.
-    - Побитовые потоковые считыватель (`BitReader`) и писатель (`BitWriter`) с поддержкой little-endian упаковки бит.
-  - **Аутентичный многоступенчатый сетевой протокол NetChan**:
-    - Корректная обработка `getchallenge <protocol> <clientChallenge>` с возвратом `challengeResponse <serverChallenge> <clientChallenge>`.
-    - Извлечение и эхо-подтверждение `challenge` в OOB-пакете `connectResponse <challenge>`, позволяющее реальному клиенту Quake Live успешно завершить фазу рукопожатия и перейти к загрузке.
-    - Реализация UDP-защиты от спуфинга `NETCHAN_GENCHECKSUM(challenge, sequence)` для протоколов 71, 90 и 91 (Quake Live и современный ioquake3) с обратной совместимостью с протоколом 68 (Quake 3 1.32).
-  - **Генератор пакетов Gamestate (`svc_gamestate`)**:
-    - Полноценная трансляция структуры игры (`CS_SERVERINFO`, `CS_SYSTEMINFO`, `CS_PLAYERS`, `CS_MOTD`, `CS_WARMUP`) с автоматическим выбором стандартных карт (`campgrounds` для Quake Live, `q3dm6` для Quake 3).
-    - Очистка от строгой проверки пакетов (`sv_pure 0`), обеспечивающая моментальную загрузку локальных ресурсов игроком без необходимости скачивания PK3-архивов с роутера.
-  - **Синхронизация и удержание сессии (Keepalive / Heartbeat)**:
-    - Обмен пакетами подтверждения (`svcNop` + `svcEOF`) и парсинг клиентских команд (`donedl`, `cp`, `disconnect`).
-    - Реальные подключенные игроки автоматически отображаются в таблице счета роутера и встроенном веб-интерфейсе с живым пингом и очками.
-  - **Мультиплексирование на одном UDP порту `:27960`**:
-    - Одновременная работа зашифрованного VPN-туннеля (ChaCha20-Poly1305 / AES-128-GCM) и виртуального игрового сервера Quake Live без взаимных помех.
+### Added and Improved
+- **Level 1: Quake Live / Quake 3 Virtual Server (connect and download map)**:
+  - **Native implementation of the id Tech 3 network protocol in pure Go**:
+    - Adaptive Huffman Coding (Sayood Adaptive Huffman Coding) with original frequency table `msgHData` id Tech 3 (256 characters) without third-party C/C++ dependencies.
+    - Bit-stream reader (`BitReader`) and writer (`BitWriter`) with support for little-endian bit packing.
+  - **Authentic multi-stage NetChan network protocol**:
+    - Correct processing of `getchallenge <protocol> <clientChallenge>` with return of `challengeResponse <serverChallenge> <clientChallenge>`.
+    - Retrieving and echoing `challenge` into the OOB package `connectResponse <challenge>`, allowing the actual Quake Live client to successfully complete the handshake phase and proceed to load.
+    - Implementation of UDP anti-spoofing protection `NETCHAN_GENCHECKSUM(challenge, sequence)` for protocols 71, 90 and 91 (Quake Live and modern ioquake3) with backward compatibility with protocol 68 (Quake 3 1.32).
+  - **Gamestate Packet Generator (`svc_gamestate`)**:
+    - Full broadcast of the game structure (`CS_SERVERINFO`, `CS_SYSTEMINFO`, `CS_PLAYERS`, `CS_MOTD`, `CS_WARMUP`) with automatic selection of standard maps (`campgrounds` for Quake Live, `q3dm6` for Quake 3).
+    - Cleaning up strict packet inspection (`sv_pure 0`), ensuring instant loading of local resources by the player without the need to download PK3 archives from the router.
+  - **Synchronization and session retention (Keepalive / Heartbeat)**:
+    - Exchange of confirmation packets (`svcNop` + `svcEOF`) and parsing of client commands (`donedl`, `cp`, `disconnect`).
+    - Real connected players are automatically displayed in the router's score table and built-in web interface with live ping and points.
+  - **Multiplexing on one UDP port `:27960`**:
+    - Simultaneous operation of an encrypted VPN tunnel (ChaCha20-Poly1305 / AES-128-GCM) and the Quake Live virtual game server without mutual interference.
 
 ## [1.0.27] - 2026-09-04
-### Добавлено и Улучшено
-- **Единый универсальный исполняемый файл для всех платформ (Windows, Linux, macOS, MIPS, ARM)**:
-  - Каждый бинарник включает в себя полноценный **Клиент**, **Сервер** и **Удаленный настройщик по SSH**.
-  - Веб-интерфейс автономного клиента `ql-vpn` полностью идентичен вкладке QuakeLive-VPN в Keenetic Control Center (3 подвкладки: Клиент, Сервер, Развернуть на VPS по SSH).
-  - В удаленном SSH-настройщике добавлена возможность выбора порта по умолчанию для веб-интерфейса администрирования (по умолчанию 8091).
-- **Интеграция с общим репозиторием `snakelair/Keenetic`**:
-  - Публикация скомпилированных OPKG пакетов `.ipk` под все архитектуры роутеров (MIPS, MIPSLE, ARMv7, AArch64, x86_64) с бережным сохранением пакетов `smart-photo`, `smart-route` и `smart-utils`.
-  - Установка через SSH-скрипт с поддержкой выбора порта, аналогично SmartUtils.
-  - Развертывание бинарников на удаленные Linux VPS через общий репозиторий `snakelair/Keenetic`.
-- **Фирменная иконка Quake Live**:
-  - Использование эталонной эмблемы Quake Live (красный круг, белое кольцо, кинжал и разомкнутый полумесяц) в трее Windows, навигационной вкладке и главном баннере.
+### Added and Improved
+- **Single universal executable for all platforms (Windows, Linux, macOS, MIPS, ARM)**:
+  - Each binary includes a full **Client**, **Server** and **Remote Setup via SSH**.
+  - The web interface of the standalone client `ql-vpn` is completely identical to the QuakeLive-VPN tab in the Keenetic Control Center (3 subtabs: Client, Server, Deploy to VPS via SSH).
+  - In the remote SSH configurer, the ability to select the default port for the web administration interface has been added (default is 8091).
+- **Integration with the shared repository `snakelair/Keenetic`**:
+  - Publishing compiled OPKG packages `.ipk` for all router architectures (MIPS, MIPSLE, ARMv7, AArch64, x86_64) with careful preservation of packages `smart-photo`, `smart-route` and `smart-utils`.
+  - Installation via SSH script with port selection support, similar to SmartUtils.
+  - Deployment of binaries to remote Linux VPS via a common repository `snakelair/Keenetic`.
+- **Quake Live Icon**:
+  - Using the Quake Live reference logo (red circle, white ring, dagger and open crescent) in the Windows tray, navigation tab and main banner.
 
 ## [1.2.17] - 2026-09-04
-### Добавлено и Улучшено
-- **Скрытность сервера QuakeLive-VPN и защита от листинга**:
-  - **Исключение из глобальных списков серверов**: сервер QL-VPN полностью игнорирует запросы `getservers`, `getserversExt`, `heartbeat` и объявляет флаги `\sv_hidden\1`, `\hidden\1`, `\sv_master1\`, `\sv_master2\`, предотвращая индексацию сканерами ТСПУ и игровыми браузерами.
-  - **Исключение локального сервера из клиентского списка**: собственный сервер роутера больше не попадает в листинг сохраненных серверов клиента на роутере; клиентский список разделен и отображает только удаленные подключения.
-- **Умное создание токенов клиентов/игроков**:
-  - **Автоподстановка имен игроков**: автоматический выбор первого свободного классического персонажа Quake (`Sarge`, `Ranger`, `Visor`, `Doom`, `Crash`, `Major`, `Keel`...) при создании токенов.
-  - **Автоопределение внешнего WAN IP роутера**: сервис автоматически определяет реальный белый IP роутера через `POST /api/diagnostics/external-ip` и подставляет `${WAN_IP}:27960` в поле адреса сервера с возможностью ручного обновления по кнопке «🌐 Определить WAN IP».
-  - **Редактируемый адрес подключения (Предустановка)**: адрес сервера в токене теперь является лишь предустановкой — клиент (как в Windows GUI, так и на роутере) может свободно указать любой другой внешний IP или DDNS-домен непосредственно перед подключением.
-- **Фирменная символика Quake Live (Красный значок)**:
-  - **Динамическая иконка системного трея Windows**: генерация в чистом Go красного шеврона Quake Live (`#dc2626`) с белым готическим символом «Q» и кинжалом через Win32 `CreateIconFromResourceEx`.
-  - **Векторная иконка на роутере**: замена эмодзи 🎮 на вкладке навигации и в баннере роутера на фирменную красную векторную эмблему Quake Live.
-### Исправлено и Оптимизировано
-- **Ликвидация зависаний и статтеров в клиенте Windows (`ql-vpn`)**:
-  - **Неблокирующее подключение**: метод `/api/connect` переведён в полностью асинхронный режим — мгновенный HTTP-ответ клиенту без блокировки интерфейса на время сетевого рукопожатия UDP (до 6 секунд).
-  - **Индикация процесса и защита от спам-кликов**: активная кнопка подключения переходит в состояние `⏳ Подключение...` с анимированным спиннером, остальные кнопки блокируются на время соединения.
-  - **Устранение сброса DOM каждые 1.5 секунды**: список серверов кэширует хэш состояния и перерисовывается только при фактических изменениях (добавление, удаление, смене статуса), устраняя потерю фокуса и дергание hover-эффектов.
-  - **Оптимизация рендеринга CSS**: замена тяжелого `backdrop-filter: blur(10px)` на чистый и быстрый темный фон `#121826`, гарантирующий 60 FPS рендеринг без микро-статтеров GPU/CPU.
-  - **Потокобезопасность Win32 Tray**: вызовы `SetStatus` и действия контекстного меню переведены в неблокирующие горутины, исключая взаимные блокировки потока оконных сообщений Проводника.
-- **Надежность сервера QuakeLive-VPN на роутере**:
-  - **Персистентное сохранение состояния сервера (`qlvpn-server.json`)**: сервер QL-VPN сохраняет флаг активности и автоматически запускается на UDP-порту `:27960` при перезагрузке роутера или перезапуске службы `smart-vpn`.
-  - **Информативные таймауты сетевого рукопожатия**: детализированные сообщения в журнале событий при недоступности UDP-порта или отключенном сервере.
+### Added and Improved
+- **QuakeLive-VPN server stealth and listing protection**:
+  - **Exception from global server lists**: the QL-VPN server completely ignores requests `getservers`, `getserversExt`, `heartbeat` and declares flags `\sv_hidden\1`, `\hidden\1`, `\sv_master1\`, `\sv_master2\`, preventing indexing by TSPU scanners and gaming browsers.
+  - **Excluding the local server from the client list**: the router’s own server is no longer included in the list of saved client servers on the router; the client list is split and displays only remote connections.
+- **Smart creation of client/player tokens**:
+  - **Auto-substitution of player names**: automatic selection of the first free classic Quake character (`Sarge`, `Ranger`, `Visor`, `Doom`, `Crash`, `Major`, `Keel`...) when creating tokens.
+  - **Auto-detection of external WAN IP router**: the service automatically detects the real white IP of the router via `POST /api/diagnostics/external-ip` and substitutes `${WAN_IP}:27960` in the server address field with the ability to manually update using the “🌐 Determine WAN IP” button.
+  - **Editable connection address (Preset)**: the server address in the token is now only a preset - the client (both in the Windows GUI and on the router) can freely specify any other external IP or DDNS domain immediately before connecting.
+- **Quake Live Branding (Red Icon)**:
+  - **Dynamic Windows system tray icon**: pure Go generation of a red Quake Live chevron (`#dc2626`) with a white gothic "Q" symbol and a dagger via Win32 `CreateIconFromResourceEx`.
+  - **Router Vector Icon**: Replaces the 🎮 emoji on the navigation tab and router banner with Quake Live's signature red vector logo.
+### Fixed and Optimized
+- **Eliminating freezes and stutters in the Windows client (`ql-vpn`)**:
+  - **Non-blocking connection**: the `/api/connect` method has been switched to completely asynchronous mode - an instant HTTP response to the client without blocking the interface for the duration of the UDP network handshake (up to 6 seconds).
+  - **Process indicator and protection against spam clicks**: the active connection button goes into the `⏳ Подключение...` state with an animated spinner, the remaining buttons are blocked for the duration of the connection.
+  - **Eliminate DOM reset every 1.5 seconds**: The server list caches the state hash and is redrawn only on actual changes (adding, deleting, changing status), eliminating focus loss and jittery hover effects.
+  - **CSS rendering optimization**: replacing the heavy `backdrop-filter: blur(10px)` with a clean and fast dark background `#121826`, guaranteeing 60 FPS rendering without GPU/CPU micro-stutters.
+  - **Win32 Tray Thread Safety**: Moved `SetStatus` calls and context menu actions to non-blocking goroutines, eliminating the deadlock of the Explorer window message thread.
+- **Reliability of the QuakeLive-VPN server on the router**:
+  - **Persistent saving of server state (`qlvpn-server.json`)**: The QL-VPN server saves the activity flag and automatically starts on the UDP port `:27960` when the router is rebooted or the `smart-vpn` service is restarted.
+  - **Informative network handshake timeouts**: detailed messages in the event log when a UDP port is unavailable or the server is disconnected.
 
 ## [1.2.15] - 2026-09-04
-### Улучшено
-- **Очистка оформления заголовка QuakeLive-VPN**:
-  - Убрана визуальная рамка `.ql-title-frame` вокруг названия протокола `QuakeLive-VPN` и тега маскировки `id Tech 3 NetChan Camouflage`.
-  - Элементы заголовка гармонично интегрированы в единую строку главного баннера вкладки без избыточных внутренних границ.
+### Improved
+- **Cleaning up QuakeLive-VPN header design**:
+  - Removed the `.ql-title-frame` visual frame around the protocol name `QuakeLive-VPN` and the masking tag `id Tech 3 NetChan Camouflage`.
+  - Header elements are harmoniously integrated into a single line of the main tab banner without redundant internal borders.
 
 ## [1.2.14] - 2026-09-04
-### Добавлено
-- **Полноценный Windows-клиент QuakeLive-VPN с треем и журналом событий**:
-  - **Без консольного окна (Silent GUI Launch)**: сборка с флагом подсистемы `-H=windowsgui` исключает открытие окна командной строки при запуске клиентом. При вызове из терминала используется `AttachConsole` для поддержки CLI-команд.
-  - **Иконка в системном трее Windows (System Tray)**: яркая системная иконка щита (`IDI_SHIELD`), контекстное меню по правому клику (открытие пульта управления, быстрое переключение туннеля, выход) и автоматическое восстановление при перезапуске Проводника (`TaskbarCreated`).
-  - **Живой журнал событий подключения (Live Event Log)**: встроенный терминал событий в веб-интерфейсе (`127.0.0.1:8092`) с автопрокруткой, цветовой дифференциацией событий и детальным логированием каждого шага рукопожатия.
-  - **Автоматическая нормализация адреса сервера**: устранена ошибка с отсутствием порта при подключении по токену (`missing port in address`); порт `:27960` подставляется автоматически при генерации, импорте и установке соединения.
-  - **Безопасная асинхронная модель подключения**: устранение блокировок мьютекса во время сетевых запросов, независимый мьютекс для кольцевого буфера логов, гарантирующий мгновенную отдачу статуса.
+### Added
+- **Full-fledged QuakeLive-VPN Windows client with tray and event log**:
+  - **Without a console window (Silent GUI Launch)**: building with the `-H=windowsgui` subsystem flag prevents the command line window from opening when launched by the client. When called from a terminal, `AttachConsole` is used to support CLI commands.
+  - **Windows System Tray icon**: bright system shield icon (`IDI_SHIELD`), right-click context menu (open control panel, quick tunnel switch, exit) and automatic recovery when restarting Explorer (`TaskbarCreated`).
+  - **Live Event Log**: built-in event terminal in the web interface (`127.0.0.1:8092`) with auto-scrolling, color differentiation of events and detailed logging of each handshake step.
+  - **Automatic normalization of the server address**: the error with the lack of a port when connecting using a token (`missing port in address`) has been fixed; port `:27960` is substituted automatically when generating, importing and establishing a connection.
+  - **Secure asynchronous connection model**: elimination of mutex locks during network requests, independent mutex for the circular log buffer, guaranteeing instant status return.
 
 ## [1.2.13] - 2026-09-04
-### Улучшено
-- **Редизайн главного информационного баннера QuakeLive-VPN**:
-  - Полная переверстка баннера в компонент `.qlvpn-banner` по высоким стандартам стилистики SmartUtils и каталога.
-  - Акцентная неоновая полоса слева, глубокий градиентный фон Glassmorphism с мягкой тенью.
-  - Монолитный фрейм названия с никнеймом, тегом маскировки и бейджем порта `UDP :27960`.
-  - Аккуратный правый блок с мини-карточками характеристик протокола (Порт `27960`, Шифр `X25519`) и кнопкой обновления.
+### Improved
+- **Redesign of the main information banner of QuakeLive-VPN**:
+  - Complete redesign of the banner into the `.qlvpn-banner` component according to the high standards of SmartUtils and the catalog style.
+  - Neon accent stripe on the left, deep gradient Glassmorphism background with soft shadow.
+  - Monolithic name frame with nickname, masking tag and port badge `UDP :27960`.
+  - A neat right block with mini-cards of protocol characteristics (Port `27960`, Code `X25519`) and an update button.
 
 ## [1.2.12] - 2026-09-04
-### Улучшено
-- **Унификация стиля подвкладок QuakeLive-VPN**:
-  - Подвкладки «👤 Клиент QL-VPN», «🛡️ Сервер на роутере» и «🚀 Развернуть на VPS по SSH» переведены на единый стиль `subtab-btn` (аналогично вкладке «Родные VPN»).
-  - Добавлены динамические бейджи статуса с цветовой индикацией: `В сети` / `Откл` для клиента и `:27960` / `Стоп` для сервера.
-  - Панель подвкладок оформлена через `.native-subtabs-bar` с кнопкой быстрого обновления справа.
+### Improved
+- **Unification of QuakeLive-VPN sub-tabs style**:
+  - The sub-tabs “👤 QL-VPN Client”, “🛡️ Server on router” and “🚀 Deploy to VPS via SSH” have been transferred to a single `subtab-btn` style (similar to the “Native VPN” tab).
+  - Added dynamic status badges with color indication: `В сети` / `Откл` for the client and `:27960` / `Стоп` for the server.
+  - The subtab panel is designed using `.native-subtabs-bar` with a quick refresh button on the right.
 
 ## [1.2.11] - 2026-09-04
-### Улучшено
-- **Стилизация вкладки QuakeLive-VPN**:
-  - Добавлена стильная неоновая рамка `.ql-title-frame` вокруг заголовка `QuakeLive-VPN [id Tech 3 NetChan Camouflage]` с эффектом Glassmorphism, акцентным свечением и моноширинным тегом маскировки.
+### Improved
+- **Styling the QuakeLive-VPN tab**:
+  - Added a stylish neon frame `.ql-title-frame` around the header `QuakeLive-VPN [id Tech 3 NetChan Camouflage]` with Glassmorphism effect, accent glow and monospace masking tag.
 
 ## [1.2.10] - 2026-09-04
-### Исправлено
-- **Исправление создания TUN-интерфейса QuakeLive-VPN на MIPSLE (Keenetic)**:
-  - Устранена ошибка `failed to create server TUN: ioctl TUNSETIFF failed: file descriptor in bad state (EBADFD)`.
-  - Замена жестко закодированного значения `0x400454ca` на нативный `syscall.TUNSETIFF`: в архитектуре MIPS бит направления ioctl `_IOC_WRITE` отличается от x86/ARM, из-за чего системный вызов на MIPS ожидает код команды `0x800454ca`.
-  - Добавлена надежная настройка сетевого интерфейса TUN через поиск утилит `ip` и `ifconfig` по путям `/opt/sbin`, `/sbin`, `/usr/sbin` с предварительным поднятием линка (`ip link set up`) и установкой MTU до назначения IP-адреса.
+### Corrected
+- **Fix for creating QuakeLive-VPN TUN interface on MIPSLE (Keenetic)**:
+  - Error `failed to create server TUN: ioctl TUNSETIFF failed: file descriptor in bad state (EBADFD)` has been fixed.
+  - Replacing the hard-coded `0x400454ca` value with the native `syscall.TUNSETIFF`: In MIPS architecture, the ioctl direction bit `_IOC_WRITE` is different from x86/ARM, causing the system call on MIPS to expect the command code `0x800454ca`.
+  - Added reliable configuration of the TUN network interface through the search for utilities `ip` and `ifconfig` along the paths `/opt/sbin`, `/sbin`, `/usr/sbin` with preliminary raising of the link (`ip link set up`) and setting the MTU before assignment IP addresses.
 
 ## [1.2.9] - 2026-09-04
-### Добавлено
-- **Полноценная интеграция QuakeLive-VPN (QL-VPN) в панель управления SmartVPN**:
-  - **Выделенная вкладка управления «QuakeLive-VPN»**:
-    - Интеграция в общее верхнее меню с отображением порта `:27960` в бейдже.
-    - Поддержка трех режимов в под-вкладках: «👤 Клиент», «🛡️ Сервер на роутере» и «🚀 Развернуть на VPS по SSH».
-  - **Режим Клиента QL-VPN**:
-    - Быстрое подключение по токену `qlvpn://...` или `Bearer ...`.
-    - Карточки статуса туннеля в реальном времени: состояние, адрес сервера, имя игрока, IP и пинг (RTT) по sequence ACK.
-    - Список сохраненных серверов с быстрым подключением в один клик и копированием токена.
-    - Настройка раздельной маршрутизации (Split Tunneling): весь трафик (`0.0.0.0/0`) или выборочные подсети.
-  - **Режим Сервера на роутере**:
-    - Запуск и остановка игрового сервера Quake Live на порту 27960 UDP.
-    - Интерактивный живой скорборд (Scoreboard) активных игроков: имя, фраги, задержка (пинг), выделенный IP в туннеле.
-    - Встроенный генератор токенов Bearer для новых игроков/клиентов с сохранением в `qlvpn-tokens.json`.
-    - Таблица выданных токенов с возможностью копирования и удаления.
-  - **Автоматическое 1-Click развертывание на удаленный VPS по SSH**:
-    - Подключение с роутера к удаленному Linux VPS (Ubuntu/Debian) по SSH с паролем или SSH-ключом.
-    - Потоковая трансляция журнала установки в реальном времени (live terminal).
-    - Автоматическая настройка IPv4 forwarding, правил `iptables` NAT Masquerade, systemd-сервиса `ql-vpn.service` и генерация токена игрока.
-    - Автоматический импорт созданного токена в список серверов роутера и кнопка немедленного подключения.
-  - **Автономный клиент под Windows с треем**:
-    - Нативный Win32 трей (CGO-free) с контекстным меню.
-    - Локальный веб-интерфейс (`127.0.0.1:8092`) для управления токенами и маршрутизацией.
+### Added
+- **Full integration of QuakeLive-VPN (QL-VPN) into the SmartVPN control panel**:
+  - **Dedicated management tab “QuakeLive-VPN”**:
+    - Integration into the general top menu with the display of the `:27960` port in the badge.
+    - Support for three modes in sub-tabs: “👤 Client”, “🛡️ Server on router” and “🚀 Deploy to VPS via SSH”.
+  - **QL-VPN Client Mode**:
+    - Fast connection via token `qlvpn://...` or `Bearer ...`.
+    - Real-time tunnel status cards: status, server address, player name, IP and ping (RTT) by sequence ACK.
+    - List of saved servers with quick one-click connection and token copying.
+    - Configuring split routing (Split Tunneling): all traffic (`0.0.0.0/0`) or selected subnets.
+  - **Server mode on the router**:
+    - Starting and stopping the Quake Live game server on port 27960 UDP.
+    - Interactive live Scoreboard of active players: name, frags, latency (ping), dedicated IP in the tunnel.
+    - Built-in Bearer token generator for new players/clients with saving in `qlvpn-tokens.json`.
+    - Table of issued tokens with the ability to copy and delete.
+  - **Automatic 1-Click deployment to remote VPS via SSH**:
+    - Connecting from a router to a remote Linux VPS (Ubuntu/Debian) via SSH with a password or SSH key.
+    - Live installation log streaming (live terminal).
+    - Automatic configuration of IPv4 forwarding, `iptables` NAT Masquerade rules, systemd service `ql-vpn.service` and player token generation.
+    - Automatic import of the created token into the list of router servers and an immediate connection button.
+  - **Standalone client for Windows with tray**:
+    - Native Win32 tray (CGO-free) with context menu.
+    - Local web interface (`127.0.0.1:8092`) for managing tokens and routing.
 
 ## [1.2.8] - 2026-09-04
-### Добавлено
-- **Разработка собственного VPN-протокола «QuakeLive-VPN» (QL-VPN)**:
-  - **Полная маскировка под сетевой трафик игры Quake Live / id Tech 3**:
-    - Использование стандартного выделенного UDP-порта `27960 UDP` (приоритетный гейминг-трафик, отсутствие блокировок провайдерами).
-    - Эмуляция 11-байтного заголовка Quake Live `Netchan` (`OutgoingSequence`, `qport`, `IncomingSequence`, `Opcode`).
-    - Маскировка опкодов под команды `clc_move` (0x02), `clc_clientCommand` (0x03) со стороны клиента и `svc_snapshot` (0x07), `svc_gamestate` (0x04) со стороны сервера.
-    - Динамический паддинг для устранения энтропийных и статистических сигнатур длин пакетов.
-    - Имитация тикрейта (Keepalive usercmd ticks) при простое для поддержания NAT-трансляций без признаков туннеля.
-  - **Защита от активного зондирования (Active Probe Defense)**:
-    - Сервер автоматически распознает OOB-пакеты сканеров (`getstatus`, `getinfo`, `getchallenge`) и отвечает подлинными статусами сервера Quake Live (карта `q3dm6`, имя сервера, список игроков, пинг).
-    - Цензоры и боты DPI видят сервер как обычный выделенный игровой сервер.
-  - **Аппаратная оптимизация для чипов Keenetic**:
-    - Автосогласование алгоритмов шифрования под процессорную архитектуру:
-      - MediaTek MT7621 (MIPSLE softfloat) — **ChaCha20-Poly1305** (быстрые целочисленные операции, разгрузка ядра через Fastpath/conntrack).
-      - MediaTek Filogic / Cortex-A53 (ARM64) — **AES-128-GCM** с аппаратными инструкциями ARM Crypto Extensions (ARM-CE) для скорости > 1.8 Гбит/с при нагрузке CPU < 5%.
-  - **Криптографический стек (Zero External Dependencies)**:
-    - Обмен ключами Curve25519 (X25519) ECDH через `crypto/ecdh`.
-    - Деривация сессионных ключей HKDF-SHA256 и HMAC-аутентификация с Pre-Shared Key (PSK).
-    - Защита от атак повтора (Anti-Replay) через 128-битное скользящее окно (Sliding Window Bitmap).
-  - **Клиент и Сервер**:
-    - Подсистема `internal/qlvpn/` с прямой поддержкой Linux `/dev/net/tun` (`IFF_TUN | IFF_NO_PI`).
-    - Консольная утилита `cmd/ql-vpn/` (`-server`, `-client`, `-keygen`, `-probe-test`).
+### Added
+- **Development of our own VPN protocol “QuakeLive-VPN” (QL-VPN)**:
+  - **Full disguise as network traffic of the game Quake Live / id Tech 3**:
+    - Using a standard dedicated UDP port `27960 UDP` (priority gaming traffic, no blocking by providers).
+    - Quake Live 11-byte header emulation `Netchan` (`OutgoingSequence`, `qport`, `IncomingSequence`, `Opcode`).
+    - Masking opcodes under commands `clc_move` (0x02), `clc_clientCommand` (0x03) on the client side and `svc_snapshot` (0x07), `svc_gamestate` (0x04) on the server side.
+    - Dynamic padding to eliminate entropy and statistical signatures of packet lengths.
+    - Imitation of tickrate (Keepalive usercmd ticks) during idle time to maintain NAT translations without signs of a tunnel.
+  - **Active Probe Defense**:
+    - The server automatically recognizes OOB scanner packets (`getstatus`, `getinfo`, `getchallenge`) and responds with genuine Quake Live server statuses (`q3dm6` map, server name, player list, ping).
+    - Censors and DPI bots see the server as a regular dedicated game server.
+  - **Hardware optimization for Keenetic chips**:
+    - Auto-negotiation of encryption algorithms for processor architecture:
+      - MediaTek MT7621 (MIPSLE softfloat) - **ChaCha20-Poly1305** (fast integer operations, kernel offload via Fastpath/conntrack).
+      - MediaTek Filogic / Cortex-A53 (ARM64) - **AES-128-GCM** with ARM Crypto Extensions (ARM-CE) hardware instructions for speeds > 1.8 Gbps at < 5% CPU load.
+  - **Cryptographic stack (Zero External Dependencies)**:
+    - Curve25519 (X25519) ECDH key exchange via `crypto/ecdh`.
+    - HKDF-SHA256 session key derivation and HMAC authentication with Pre-Shared Key (PSK).
+    - Protection against replay attacks (Anti-Replay) through a 128-bit sliding window (Sliding Window Bitmap).
+  - **Client and Server**:
+    - Subsystem `internal/qlvpn/` with direct support for Linux `/dev/net/tun` (`IFF_TUN | IFF_NO_PI`).
+    - Console utility `cmd/ql-vpn/` (`-server`, `-client`, `-keygen`, `-probe-test`).
 
 ## [1.2.7] - 2026-09-04
-### Добавлено
-- **Мониторинг CPU ядра Sing-Box и автоматическая защита от перегрузки роутера (Watchdog Guard)**:
-  - **Высокоточный мониторинг нагрузки CPU в реальном времени**:
-    - Фоновый супервизор ежесекундно считывает дельту тиков пользовательского и системного времени (`utime` + `stime`) из `/proc/<pid>/stat` и общую сумму тиков роутера из `/proc/stat`.
-    - Точный расчет процента загрузки процессора роутера процессором `sing-box` (от 0.0% до 100.0%).
-    - Карточка «Нагрузка CPU» в шапке панели Sing-Box с цветовой индикацией (зеленый / желтый / красный) и статусом супервизора.
-  - **Настраиваемый сторожевой таймер от перегрузки (Watchdog Guard)**:
-    - Автоматическое предотвращение зависания роутера Keenetic, сбоев Wi-Fi и падения маршрутизации при бесконечных циклах или сетевом флуде.
-    - Настраиваемый порог нагрузки процессора: от 50% (нагрузка 1 ядра) до 100% (полная перегрузка роутера), по умолчанию 95%.
-    - Настраиваемый интервал непрерывной перегрузки: 15с, 30с, 60с (по умолчанию), 120с, 300с. Кратковременные пики (например, тесты скорости) корректно игнорируются.
-    - Выбор действия при аварии: автоматический перезапуск (`restart`) или защитное отключение (`stop`).
-    - Сохранение параметров в постоянную конфигурацию `config.json` (`singbox_watchdog`).
-    - Новая вкладка «🛡️ Защита CPU (Watchdog)» с живым индикатором состояния, счетчиком секунд перегрузки и формой управления.
-    - Запись событий срабатывания защиты в системный журнал и лог-буфер демона.
+### Added
+- **Sing-Box core CPU monitoring and automatic router overload protection (Watchdog Guard)**:
+  - **Highly accurate real-time CPU load monitoring**:
+    - The background supervisor reads the delta of user and system time ticks (`utime` + `stime`) from `/proc/<pid>/stat` and the total sum of router ticks from `/proc/stat` every second.
+    - Exact calculation of the percentage of router processor load by processor `sing-box` (from 0.0% to 100.0%).
+    - “CPU Load” card in the header of the Sing-Box panel with color indication (green / yellow / red) and supervisor status.
+  - **Adjustable overload watchdog (Watchdog Guard)**:
+    - Automatically prevents Keenetic router from freezing, Wi-Fi failures and routing crashes due to endless loops or network flooding.
+    - Adjustable processor load threshold: from 50% (load of 1 core) to 100% (complete overload of the router), default 95%.
+    - Configurable continuous overload interval: 15s, 30s, 60s (default), 120s, 300s. Short-term peaks (such as speed tests) are correctly ignored.
+    - Selection of action in case of emergency: automatic restart (`restart`) or protective shutdown (`stop`).
+    - Saving parameters to the permanent configuration `config.json` (`singbox_watchdog`).
+    - New tab “🛡️ CPU Protection (Watchdog)” with a live status indicator, overload seconds counter and control form.
+    - Recording protection trigger events in the system log and daemon log buffer.
 
 ## [1.2.6] - 2026-09-04
-### Добавлено
-- **Расширение Sing-Box: ShadowTLS (v3) и библиотека пресетов маскировки TLS**:
-  - **Поддержка протокола ShadowTLS (v3)**:
-    - Интеграция исходящих узлов типа `shadowtls` с версией v3, защищенным паролем и сокетом TLS.
-    - Поддержка импорта ссылок вида `shadowtls://password@host:port?sni=...&version=3#Name`.
-    - Добавление ShadowTLS в визуальный конструктор узлов Sing-Box.
-  - **Библиотека пресетов маскировки SNI под популярные домены**:
-    - Курированный каталог проверенных доменов маскировки для VLESS Reality и ShadowTLS:
+### Added
+- **Sing-Box Extension: ShadowTLS (v3) and TLS Masking Preset Library**:
+  - **ShadowTLS (v3) protocol support**:
+    - Integration of outgoing nodes of type `shadowtls` with version v3, password protected and TLS socket.
+    - Support for importing links like `shadowtls://password@host:port?sni=...&version=3#Name`.
+    - Adding ShadowTLS to the Sing-Box visual node builder.
+  - **Library of SNI masking presets for popular domains**:
+    - Curated directory of verified masking domains for VLESS Reality and ShadowTLS:
       - 🍏 **Apple**: `gateway.icloud.com`, `swdist.apple.com` (uTLS: `ios`, `safari`)
       - 🪟 **Microsoft**: `www.microsoft.com`, `update.microsoft.com` (uTLS: `chrome`)
       - ☁️ **Cloudflare**: `www.cloudflare.com`, `speed.cloudflare.com`, `www.speedtest.net`
       - 🔍 **Google**: `dl.google.com`, `fonts.googleapis.com`
       - 📱 **Samsung / NVIDIA**: `samsung.com`, `images.nvidia.com`
-      - 🇷🇺 **Белый список РФ**: `yandex.ru`, `vk.com`, `gosuslugi.ru`, `ozon.ru`
-    - Интерактивные чипы пресетов в модальном окне добавления узлов с авто-подстановкой SNI и uTLS.
-  - **Живая проверка TLS-рукопожатия с роутера (SNI Probe)**:
-    - Эндпоинт `POST /api/singbox/test-sni` для проверки доступности выбранного маскировочного домена прямо с Keenetic через TLS 1.3 / ALPN `h2`.
-    - Измерение задержки (ping ms) рукопожатия, проверка версии протокола и издателя сертификата.
-    - Кнопка «⚡ Проверить SNI» в форме добавления узла и список с тестированием в Visual Config.
-  - **Связка с Каталогом клиентов**:
-    - Карточки ShadowTLS и Xray-core/VLESS Reality в Каталоге отмечены статусом `⚡ В ядре Sing-Box` с кнопкой быстрого перехода к настройке.
+      - 🇷🇺 **White list of the Russian Federation**: `yandex.ru`, `vk.com`, `gosuslugi.ru`, `ozon.ru`
+    - Interactive preset chips in the modal window for adding nodes with auto-substitution of SNI and uTLS.
+  - **Live TLS handshake check from a router (SNI Probe)**:
+    - Endpoint `POST /api/singbox/test-sni` to check the availability of the selected masking domain directly from Keenetic via TLS 1.3 / ALPN `h2`.
+    - Measuring the delay (ping ms) of a handshake, checking the protocol version and certificate issuer.
+    - Button “⚡ Check SNI” in the form for adding a node and a list with testing in Visual Config.
+  - **Link to the Customer Catalog**:
+    - ShadowTLS and Xray-core/VLESS Reality cards in the Catalog are marked with the status `⚡ В ядре Sing-Box` with a button to quickly go to configuration.
 
 ## [1.2.5] - 2026-09-04
-### Добавлено
-- **Интерактивный каталог клиентов и протоколов VPN / Anti-DPI (Roadmap)**:
-  - Добавлена новая вкладка «Каталог клиентов» с бейджем «План (12)» для клиентов и утилит, отсутствующих в стандартной прошивке KeeneticOS.
-  - **5 категорий клиентов**:
-    1. 🛡️ **Защита от DPI и маскировка трафика**: ShadowTLS (v3), Cloak (ck-client), TUIC (v5), Xray-core (VLESS Reality / Vision).
-    2. 🌐 **Mesh-сети и P2P-туннели**: Tailscale (WireGuard Mesh / DERP / Exit Node), Nebula (P2P оверлей от Slack Technologies).
-    3. ⚡ **Локальный обход DPI без VPN и VPS**: Zapret (NFQWS / TPWS от bol-van для разблокировки YouTube и Discord без потери скорости), ByeDPI (ciadpi от hufrea, легковесный C-прокси с потреблением RAM < 3 МБ).
-    4. 🧅 **Анонимные и распределенные сети**: Tor со скрытыми мостами Snowflake и Meek (WebRTC маскировка), I2P (демон i2pd на C++).
-    5. 🏢 **Корпоративные SSL-VPN**: AnyConnect / OpenConnect (клиент Cisco AnyConnect, Fortinet, GlobalProtect), SoftEther VPN Client (многопоточный L2 HTTPS туннель).
-  - Для каждого клиента приведены:
-    - Принцип работы и архитектурное назначение.
-    - Обоснование отсутствия в стандартной прошивке KeeneticOS.
-    - Ключевые преимущества и фичи.
-    - Технические требования: потребление RAM, нагрузка CPU, поддерживаемые архитектуры (MIPS, ARM, MIPSLE) и бинарники.
-    - Статус: «⏳ В плане разработки» (Roadmap v1.3).
-  - Интерактивные фильтры по категориям со счетчиками.
-  - Быстрый поиск клиентов по названию, протоколу и функционалу.
-  - Модальное окно с подробным планом интеграции в стек роутера Keenetic.
-  - Информационный баннер в разделе «Другие VPN» для быстрого перехода в каталог.
+### Added
+- **Interactive catalog of VPN / Anti-DPI clients and protocols (Roadmap)**:
+  - A new tab “Client Catalog” has been added with the “Plan (12)” badge for clients and utilities that are not included in the standard KeeneticOS firmware.
+  - **5 customer categories**:
+    1. 🛡️ **DPI protection and traffic masking**: ShadowTLS (v3), Cloak (ck-client), TUIC (v5), Xray-core (VLESS Reality / Vision).
+    2. 🌐 **Mesh-nets and P2P-tunnels**: Tailscale (WireGuard Mesh / DERP / Exit Node), Nebula (P2P overlay from Slack Technologies).
+    3. ⚡ **Local DPI bypass without VPN and VPS**: Zapret (NFQWS / TPWS from bol-van to unblock YouTube and Discord without losing speed), ByeDPI (ciadpi from hufrea, lightweight C-proxy with < 3 MB RAM consumption).
+    4. 🧅 **Anonymous and distributed networks**: Tor with hidden bridges Snowflake and Meek (WebRTC disguise), I2P (i2pd daemon in C++).
+    5. 🏢 **Corporate SSL-VPN**: AnyConnect / OpenConnect (Cisco AnyConnect, Fortinet, GlobalProtect client), SoftEther VPN Client (multi-threaded L2 HTTPS tunnel).
+  - For each client the following are given:
+    - Operating principle and architectural purpose.
+    - Justification for the absence of KeeneticOS in the standard firmware.
+    - Key advantages and features.
+    - Technical requirements: RAM consumption, CPU load, supported architectures (MIPS, ARM, MIPSLE) and binaries.
+    - Status: “⏳ In terms of development” (Roadmap v1.3).
+  - Interactive filters by category with counters.
+  - Quickly search for clients by name, protocol and functionality.
+  - Modal window with a detailed plan for integration into the Keenetic router stack.
+  - Information banner in the “Other VPNs” section for quick access to the directory.
 
 ## [1.2.4] - 2026-09-04
-### Добавлено
-- **Полноценная интеграция ядра Sing-Box внутри SmartVPN**:
-  - **Автоматический загрузчик официальных релизов**:
-    - Интеллектуальное определение архитектуры процессора роутера (`mipsle-softfloat`, `armv7`, `arm64`, `amd64`).
-    - Скачивание предсобранных бинарников напрямую из официальных релизов `SagerNet/sing-box` на GitHub.
-    - Встроенная потоковая распаковка архивов `.tar.gz` средствами Go без необходимости внешних утилит.
-    - Установка исполняемого файла в `/opt/etc/smart-vpn/bin/sing-box`.
-  - **Управление жизненным циклом процесса**:
-    - Запуск, остановка, перезапуск процесса демона под управлением SmartVPN.
-    - Мониторинг PID, точного времени работы (Uptime) и реального потребления памяти (RSS) из `/proc/<pid>/statm`.
-    - Кольцевой буфер журналов (500 строк) и живой просмотр логов ядра в веб-интерфейсе.
-  - **Конфигуратор Sing-Box**:
-    - **Визуальный конструктор**: настройка прозрачного TUN интерфейса (`singbox-tun`), смешанного SOCKS5/HTTP прокси-порта (`mixed-in`, 10808), порта Clash API (9090) и правил умной маршрутизации трафика (блокировка рекламы, прямой доступ к подсетям РФ и локальной сети).
-    - **Редактор Raw JSON**: форматирование JSON, автоматическая валидация синтаксиса утилитой `sing-box check` перед запуском/сохранением и быстрый сброс на проверенный шаблон.
-  - **Управление исходящими прокси-узлами (Outbounds)**:
-    - Поддержка современных протоколов: VLESS Reality (XTLS Vision + uTLS), Shadowsocks, Trojan, Hysteria2.
-    - Быстрый импорт узлов из ссылок (`vless://`, `ss://`, `trojan://`) с автоматическим добавлением в селектор.
-    - Интеграция с контроллером Clash API (`127.0.0.1:9090`) для мгновенного переключения активного узла без перезапуска процесса.
-    - Живое тестирование сетевой задержки (Ping/Delay) до каждого прокси-узла.
-  - **Сводка дашборда (Summary Dashboard)**:
-    - Отображение карточки Sing-Box на главном дашборде рядом с нативными WireGuard/AmneziaWG и SSTP туннелями.
-    - Вывод списка активных исходящих каналов с бейджами протоколов, сетевой задержкой и переключателем активного узла.
+### Added
+- **Full integration of the Sing-Box core inside SmartVPN**:
+  - **Automatic downloader of official releases**:
+    - Intelligent determination of the router processor architecture (`mipsle-softfloat`, `armv7`, `arm64`, `amd64`).
+    - Downloading pre-built binaries directly from official releases `SagerNet/sing-box` on GitHub.
+    - Built-in streaming unpacking of archives `.tar.gz` using Go without the need for external utilities.
+    - Installing the executable file to `/opt/etc/smart-vpn/bin/sing-box`.
+  - **Process life cycle management**:
+    - Start, stop, restart the daemon process running SmartVPN.
+    - Monitoring PID, exact operating time (Uptime) and real memory consumption (RSS) from `/proc/<pid>/statm`.
+    - Ring log buffer (500 lines) and live viewing of kernel logs in the web interface.
+  - **Sing-Box Configurator**:
+    - **Visual designer**: setting up a transparent TUN interface (`singbox-tun`), mixed SOCKS5/HTTP proxy port (`mixed-in`, 10808), Clash API port (9090) and smart traffic routing rules (ad blocking, direct access to Russian subnets and local network).
+    - **Raw JSON editor**: JSON formatting, automatic syntax validation by the `sing-box check` utility before running/saving and quick reset to a proven template.
+  - **Managing outgoing proxy nodes (Outbounds)**:
+    - Support for modern protocols: VLESS Reality (XTLS Vision + uTLS), Shadowsocks, Trojan, Hysteria2.
+    - Quick import of nodes from links (`vless://`, `ss://`, `trojan://`) with automatic addition to the selector.
+    - Integration with the Clash API controller (`127.0.0.1:9090`) to instantly switch the active node without restarting the process.
+    - Live testing of network latency (Ping/Delay) to each proxy node.
+  - **Summary Dashboard**:
+    - Displaying the Sing-Box card on the main dashboard next to native WireGuard/AmneziaWG and SSTP tunnels.
+    - Lists active outgoing channels with protocol badges, network latency and active node switch.
 
 ## [1.2.3] - 2026-09-04
-### Добавлено и улучшено
-- **Автоматическое распознавание AmneziaWG (AWG 2.0 / 3.0)**:
-  - Интеллектуальное сканирование и сопоставление родных интерфейсов роутера Keenetic с конфигурациями Entware AmneziaWG (`/opt/etc/awg-manager/tunnels/*.json`, `/opt/etc/awg-manager/*.conf`, `/opt/etc/amnezia/*.conf`).
-  - Сопоставление по индексу родного интерфейса (`nwgIndex`), по совпадению вычисленного публичного ключа Curve25519 (`DeriveWGPublicKey`), имени или эндпоинту пира.
-  - Обогащение интерфейса скрытыми параметрами: восстановление приватного ключа (`PrivateKey`), ключей предварительного согласования пиров (`PresharedKey`), DNS и параметров обфускации.
-- **Индикация AmneziaWG в веб-интерфейсе**:
-  - На карточках VPN и в таблице WireGuard теперь выводится отдельный фиолетовый бейдж `🛡️ AmneziaWG` вместо обычного «WireGuard».
-  - В модальном окне редактора выводится бейдж `🛡️ AmneziaWG` в заголовке окна.
-- **Редактор AmneziaWG**:
-  - При открытии туннелей AmneziaWG переключатель маскировки включается автоматически.
-  - Поля маскировки (`Jc`, `Jmin`, `Jmax`, `S1`–`S4`, `H1`–`H4`, `I1`) автоматически заполняются действующими значениями конфигурации.
-  - Двухсторонняя синхронизация обновлений конфигурации с файлами `awg-manager`.
+### Added and improved
+- **Automatic recognition of AmneziaWG (AWG 2.0 / 3.0)**:
+  - Intelligent scanning and comparison of native Keenetic router interfaces with Entware AmneziaWG configurations (`/opt/etc/awg-manager/tunnels/*.json`, `/opt/etc/awg-manager/*.conf`, `/opt/etc/amnezia/*.conf`).
+  - Match by native interface index (`nwgIndex`), by matching the calculated public key Curve25519 (`DeriveWGPublicKey`), by peer name or endpoint.
+  - Enrichment of the interface with hidden parameters: restoration of the private key (`PrivateKey`), keys for preliminary agreement of peers (`PresharedKey`), DNS and obfuscation parameters.
+- **Indication of AmneziaWG in the web interface**:
+  - VPN cards and the WireGuard table now display a separate purple `🛡️ AmneziaWG` badge instead of the usual "WireGuard".
+  - The modal editor window displays the `🛡️ AmneziaWG` badge in the window title.
+- **AmnesiaWG Editor**:
+  - When AmneziaWG tunnels are opened, the cloaking switch is turned on automatically.
+  - Masking fields (`Jc`, `Jmin`, `Jmax`, `S1`–`S4`, `H1`–`H4`, `I1`) are automatically filled in with valid configuration values.
+  - Two-way synchronization of configuration updates with `awg-manager` files.
 
 ## [1.2.2] - 2026-09-04
-### Исправлено
-- **Редактор конфигурации WireGuard**:
-  - Устранено ложное всплывающее уведомление «Маскировка отключена» при каждом открытии редактора интерфейсов WireGuard.
-  - Инициализация и сброс формы редактора переведены в тихий режим (`silent: true`).
-  - Уведомления о переключении пресетов теперь отображаются исключительно при явном нажатии пользователем на соответствующие кнопки.
+### Corrected
+- **WireGuard Configuration Editor**:
+  - Fixed the false "Masking Disabled" pop-up notification every time you open the WireGuard Interface Editor.
+  - Initialization and reset of the editor form has been switched to silent mode (`silent: true`).
+  - Notifications about switching presets are now displayed only when the user explicitly clicks on the corresponding buttons.
 
 ## [1.2.1] - 2026-09-04
-### Оптимизация и ускорение интерфейса
-- **Фоновая загрузка и кэширование VPN соединений**:
-  - Устранена блокировка интерфейса: опрос системного демона NDM перенесен в неблокирующий фоновый воркер без удержания глобального мьютекса менеджера.
-  - Кэширование тяжелой конфигурации роутера (`show running-config`) с TTL 60 секунд. Опрос статусов туннелей ускорился с 4–5 секунд до ~150 мс.
-  - Сериализация вызовов CLI-команд для устранения конфликтов блокировок сокета ядра NDM.
-  - Мгновенная отрисовка дашборда и карточек соединений из локального кэша `localStorage` (0 мс задержки при загрузке страницы, спиннер больше не висит).
-- **Реактивное обновление при активности**:
-  - Отслеживание активности пользователя (возврат на вкладку, фокус окна, клики/нажатия клавиш) с автоматическим тихим обновлением данных в фоне.
-  - Мгновенный оптимистичный отклик переключателей туннелей (Вкл/Выкл) без ожидания ответа роутера.
-  - Мгновенная доставка изменений состояния через WebSocket-рассылку без мерцания интерфейса.
+### Interface optimization and acceleration
+- **Background loading and caching of VPN connections**:
+  - Interface blocking has been removed: polling of the NDM system daemon has been moved to a non-blocking background worker without holding the global manager mutex.
+  - Caching heavy router configuration (`show running-config`) with a TTL of 60 seconds. Polling of tunnel statuses has accelerated from 4–5 seconds to ~150 ms.
+  - Serialization of CLI command calls to resolve NDM kernel socket lock conflicts.
+  - Instant rendering of the dashboard and connection cards from the local cache `localStorage` (0 ms delay when loading the page, the spinner no longer hangs).
+- **Reactive update when active**:
+  - Tracks user activity (return to tab, window focus, clicks/keystrokes) with automatic silent data updating in the background.
+  - Instant optimistic response of tunnel switches (On/Off) without waiting for a response from the router.
+  - Instant delivery of state changes via WebSocket broadcast without interface flickering.
 
 ## [1.2.0] - 2026-09-03
-### Добавлено
-- **Определение версии и стека WireGuard**:
-  - Детекция CLI-утилит: стандартный `wireguard-tools` и расширенный `amneziawg-tools`.
-  - Мониторинг загрузки ядерных модулей Linux: `wireguard.ko` и `amneziawg.ko`.
-  - Информационный баннер в редакторе с отчетом о поддержке аппаратной маскировки трафика.
-- **Наиболее полные параметры WireGuard**:
-  - Расширенные сетевые настройки: FwMark, таблица маршрутизации (Table), MTU с быстрыми пресетами (1280, 1360, 1420), DNS серверы.
-  - Поддержка хуков и скриптов запуска: `PreUp`, `PostUp`, `PreDown`, `PostDown`.
-  - Управление Preshared Key (PSK) с возможностью автоматической генерации 32-байтных ключей.
-  - Быстрый выбор разрешенных подсетей (Allowed IPs) и интервалов Keepalive.
-- **Параметры маскировки трафика (AmneziaWG / Anti-DPI / Обход блокировок ТСПУ)**:
-  - Полная поддержка параметров обфускации: `Jc` (мусорные пакеты), `Jmin`/`Jmax` (диапазон размера мусора), `S1`/`S2`/`S3`/`S4` (размеры мусорных префиксов пакетов), `H1`/`H2`/`H3`/`H4` (магические заголовки рукопожатий и данных), `I1` (кастомная имитация полезной нагрузки).
-  - Пресеты маскировки в 1 клик: «Базовая маскировка», «Анти-ТСПУ / Продвинутая», «Сброс маскировки».
-  - Функция генерации случайных параметров маскировки (Randomize Anti-DPI) для защиты от сигнатурного анализа.
-  - Двухсторонняя синхронизация всех параметров между визуальной формой и текстом `.conf`.
-  - Шаблон `AmneziaWG (с маскировкой)`.
+### Added
+- **Definition of WireGuard versions and stack**:
+  - Detection of CLI utilities: standard `wireguard-tools` and extended `amneziawg-tools`.
+  - Monitoring the loading of Linux kernel modules: `wireguard.ko` and `amneziawg.ko`.
+  - Information banner in the editor with a report on support for hardware traffic masking.
+- **The most comprehensive WireGuard parameters**:
+  - Advanced network settings: FwMark, routing table (Table), MTU with quick presets (1280, 1360, 1420), DNS servers.
+  - Support for hooks and launch scripts: `PreUp`, `PostUp`, `PreDown`, `PostDown`.
+  - Preshared Key (PSK) management with the ability to automatically generate 32-byte keys.
+  - Quick selection of allowed subnets (Allowed IPs) and keepalive intervals.
+- **Traffic masking parameters (AmneziaWG / Anti-DPI / Bypassing TSPU blocking)**:
+  - Full support for obfuscation parameters: `Jc` (garbage bags), `Jmin`/`Jmax` (garbage size range), `S1`/`S2`/`S3`/`S4` (garbage sizes packet prefixes), `H1`/`H2`/`H3`/`H4` (magic handshake and data headers), `I1` (custom payload simulation).
+  - 1-click camouflage presets: “Basic camouflage”, “Anti-TSPU / Advanced”, “Reset camouflage”.
+  - Function for generating random masking parameters (Randomize Anti-DPI) to protect against signature analysis.
+  - Two-way synchronization of all parameters between visual form and text `.conf`.
+  - Template `AmneziaWG (с маскировкой)`.
 
 ## [1.1.0] - 2026-09-03
-### Добавлено
-- **Комплексная проверка доступности (Ping + HTTP)**:
-  - Проверка ICMP Ping дополнена контролем HTTP ответов через наборы популярных серверов: Глобальные (Google, Cloudflare, Microsoft, Apple), Российские (Яндекс, VK, Mail.ru) и IT/Dev (GitHub, Telegram, Wikipedia).
-  - Быстрая проверка "Ping + HTTP" добавлена на каждую карточку VPN соединения.
-- **Полный редактор конфигурации WireGuard**:
-  - Двухрежимный редактор: визуальная форма (адрес, порт, MTU, DNS, генератор пар ключей) и текстовый редактор стандартного синтаксиса `.conf`.
-  - Управление списком пиров (добавление, удаление, Keepalive, AllowedIPs, Endpoint).
-  - Готовые шаблоны конфигураций (Cloudflare WARP, VPS сервер).
-  - Экспорт конфигурации в `.conf` и удаление интерфейса прямо из интерфейса.
-- **Графики сетевой активности (UL / DL) в реальном времени**:
-  - Высокопроизводительный Canvas-график входящего (DL) и исходящего (UL) трафика на главной странице.
-  - Динамическая сетка с автомасштабированием единиц скорости (KB/s, MB/s).
-  - Отображение текущих и пиковых скоростей передачи, переключение диапазонов 1 мин / 3 мин.
-- Порт веб-интерфейса по умолчанию изменен на **8091**.
+### Added
+- **Comprehensive availability check (Ping + HTTP)**:
+  - ICMP Ping checking is supplemented by monitoring HTTP responses through sets of popular servers: Global (Google, Cloudflare, Microsoft, Apple), Russian (Yandex, VK, Mail.ru) and IT/Dev (GitHub, Telegram, Wikipedia).
+  - A quick "Ping + HTTP" check has been added to each VPN connection card.
+- **Full WireGuard configuration editor**:
+  - Two-mode editor: visual form (address, port, MTU, DNS, key pair generator) and text editor with standard syntax `.conf`.
+  - Manage the list of peers (adding, deleting, Keepalive, AllowedIPs, Endpoint).
+  - Ready-made configuration templates (Cloudflare WARP, VPS server).
+  - Export configuration to `.conf` and delete interface directly from the interface.
+- **Real time network activity graphs (UL/DL)**:
+  - High-performance Canvas graph of incoming (DL) and outgoing (UL) traffic on the main page.
+  - Dynamic grid with auto-scaling speed units (KB/s, MB/s).
+  - Display of current and peak transmission rates, range switching 1 min / 3 min.
+- The default web interface port has been changed to **8091**.
 
 ## [1.0.0] - 2026-09-03
-### Добавлено
-- Первый официальный релиз SmartVPN для роутеров Keenetic (Entware).
-- Главный дашборд-сводка (Summary):
-  - Метрики активных, отключенных и ошибочных VPN соединений.
-  - Живой мониторинг скорости входящего и исходящего трафика (RX/TX).
-  - Карточки туннелей с быстрым управлением Вкл/Выкл в 1 клик.
-  - Мониторинг загрузки процессора роутера, оперативной памяти и времени работы.
-- Раздел родных WireGuard соединений:
-  - Просмотр пиров, разрешенных сетей (AllowedIPs), трафика и времени последнего рукопожатия (Handshake) с цветными индикаторами активности.
-  - Импорт WireGuard конфигураций (`.conf` файлов) с автогенерацией команд KeenOS NDM.
-- Раздел родных Keenetic SSTP соединений:
-  - Мониторинг серверов, учетных записей, шифрования и статуса подключения.
-- Раздел других родных VPN соединений:
-  - Поддержка OpenVPN, IPsec / IKEv2, L2TP и PPTP.
-- Раздел Sing-Box:
-  - Информационная панель и детекция бинарника `/opt/bin/sing-box` (разработка активной логики запланирована на следующий этап).
-- Инструменты диагностики сети:
-  - Ping любого узла через выбранный VPN интерфейс.
-  - Определение внешнего IP-адреса и геолокации через туннель.
-  - Тест скорости разрешения DNS.
-- Журнал событий и логов:
-  - Потоковое вещание через WebSocket в реальном времени.
-  - Фильтры уровней (INFO, WARN, ERROR) и скачивание логов.
-- Система самообновления и проверки новых версий.
-- Автоматический режим эмуляции (Mock Mode) для локальной разработки и тестирования на ПК/Windows.
+### Added
+- The first official release of SmartVPN for Keenetic (Entware) routers.
+- Main dashboard summary (Summary):
+  - Metrics for active, disconnected and failed VPN connections.
+  - Live monitoring of the speed of incoming and outgoing traffic (RX/TX).
+  - Tunnel cards with quick control On/Off in 1 click.
+  - Monitoring router processor load, RAM and operating time.
+- Section of native WireGuard connections:
+  - View peers, AllowedIPs, traffic, and last Handshake time with color-coded activity indicators.
+  - Import WireGuard configurations (`.conf` files) with automatic generation of KeenOS NDM commands.
+- Section of native Keenetic SSTP connections:
+  - Monitor servers, accounts, encryption and connection status.
+- Other native VPN connections section:
+  - Supports OpenVPN, IPsec/IKEv2, L2TP and PPTP.
+- Sing-Box Section:
+  - Information panel and binary detection `/opt/bin/sing-box` (development of active logic is planned for the next stage).
+- Network diagnostic tools:
+  - Ping any node through the selected VPN interface.
+  - Determining the external IP address and geolocation through the tunnel.
+  - DNS resolution speed test.
+- Event and log log:
+  - Real-time WebSocket streaming.
+  - Level filters (INFO, WARN, ERROR) and downloading logs.
+- Self-updating and checking system for new versions.
+- Automatic emulation mode (Mock Mode) for local development and testing on PC/Windows.

@@ -1,127 +1,127 @@
-# Руководство пользователя и Архитектура Smart-Route
+# User Guide and Smart-Route Architecture
 
-**Smart-Route** — это высокопроизводительный, легковесный системный сервис со встроенным веб-интерфейсом для роутеров **Keenetic** с установленной средой **Entware**.
-
----
-
-## 🎯 1. В чём главная идея Smart-Route?
-
-Обычные VPN-клиенты либо пускают **весь** трафик через VPN (из-за чего российские сайты и банки не открываются или тормозят), либо требуют вручную вести огромные списки маршрутов.
-
-**Smart-Route решает эту проблему автоматически и аппаратно:**
-1. **Бесшовный перехват (Failover)**: если сайт не заблокирован, он открывается напрямую на максимальной скорости вашего провайдера. Если же сайт заблокирован (TCP RST, таймаут, сброс от ТСПУ/DPI), Smart-Route **на лету подхватывает соединение**, находит рабочий VPN-туннель и передаёт данные клиенту **без обрыва вкладки в браузере**.
-2. **Аппаратная разгрузка ядра (Kernel Offload via IPSet / NDM)**: после первого успешного подключения адрес мгновенно запоминается в ядре Linux. Все последующие гигабайты и 4K-видео передаются **аппаратным чипом роутера на скорости до 1 Гбит/с при 0% нагрузки на процессор**.
+**Smart-Route** is a high-performance, lightweight system service with a built-in web interface for **Keenetic** routers with the **Entware** environment installed.
 
 ---
 
-## 🏛️ 2. Блок-схема: Жизненный цикл соединения
+## 🎯 1. What is the main idea of ​​Smart-Route?
 
-Ниже показано, что происходит с каждым сетевым пакетом от вашего смартфона, ПК или Smart TV:
+Regular VPN clients either allow **all** traffic through the VPN (which is why Russian websites and banks do not open or are slow) or require you to manually maintain huge lists of routes.
+
+**Smart-Route solves this problem automatically and in hardware:**
+1. **Seamless Failover**: If the site is not blocked, it opens directly at your ISP's maximum speed. If the site is blocked (TCP RST, timeout, reset from TSPU/DPI), Smart-Route **pick up the connection on the fly**, finds a working VPN tunnel and transfers the data to the client **without breaking the browser tab**.
+2. **Kernel Offload via IPSet / NDM**: after the first successful connection, the address is instantly remembered in the Linux kernel. All subsequent gigabytes and 4K video are transferred **by the router’s hardware chip at speeds of up to 1 Gbps with 0% processor load**.
+
+---
+
+## 🏛️ 2. Flowchart: Connection Lifecycle
+
+Below is what happens with each network packet from your smartphone, PC or Smart TV:
 
 ```mermaid
 flowchart TD
-    Start(["Пакет от устройства в LAN (Браузер, YouTube, Discord)"]) --> CheckExcluded{"Адрес в списке<br/>ИСКЛЮЧЕНИЙ?<br/>(.ru, .рф, yandex.net)"}
+    Start(["Packet from device to LAN (Browser, YouTube, Discord)"]) --> CheckExcluded{"Address in the list<br/>EXCEPTIONS?<br/>(.ru, .рф, yandex.net)"}
     
-    %% Ветка исключений
-    CheckExcluded -- "ДА" --> DirectWAN["Прямой выход в интернет (WAN)<br/>Без VPN и без анализа"]
-    DirectWAN --> Finish(["Соединение установлено"])
+    %%Exception branch
+    CheckExcluded -- "ДА" --> DirectWAN["Direct Internet access (WAN)<br/>Without VPN and without analysis"]
+    DirectWAN --> Finish(["Connection established"])
 
-    %% Ветка обычной проверки
-    CheckExcluded -- "НЕТ" --> CheckKernel{"IP уже выучен<br/>в ядре (ipset / NDM)?"}
+    %%Regular review thread
+    CheckExcluded -- "НЕТ" --> CheckKernel{"Is the IP already learned<br/>in the kernel (ipset / NDM)?"}
     
-    %% Аппаратный оффлоад
-    CheckKernel -- "ДА (Fastpath)" --> KernelOffload["Аппаратный Fastpath ядра Linux<br/>(0% нагрузки CPU, до 1 Гбит/с)"]
-    KernelOffload --> VPNOut["Выход через нужный VPN-туннель"]
+    %%Hardware offload
+    CheckKernel -- "ДА (Fastpath)" --> KernelOffload["Linux kernel hardware Fastpath<br/>(0% CPU load, up to 1 Gbit/s)"]
+    KernelOffload --> VPNOut["Exit through the desired VPN tunnel"]
     VPNOut --> Finish
 
-    %% Первичное соединение через демона
-    CheckKernel -- "НЕТ (Новый адрес)" --> Intercept["Перехват демоном Smart-Route<br/>(порт 10880, iptables REDIRECT)"]
-    Intercept --> FastList{"Домен есть в<br/>списках Fast-Path?"}
+    %%Primary connection via daemon
+    CheckKernel -- "НЕТ (Новый адрес)" --> Intercept["Interception by Smart-Route<br/> daemon (port 10880, iptables REDIRECT)"]
+    Intercept --> FastList{"Is the domain in <br/>Fast-Path lists?"}
     
-    FastList -- "ДА" --> SkipProbe["Мгновенная отправка в VPN<br/>(без ожидания таймаута WAN)"]
-    FastList -- "НЕТ" --> TryWAN["Пробуем открыть через<br/>основного провайдера (WAN)"]
+    FastList -- "ДА" --> SkipProbe["Instant sending to VPN<br/> (without waiting for WAN timeout)"]
+    FastList -- "НЕТ" --> TryWAN["We are trying to open via <br/>main provider (WAN)"]
     
-    TryWAN --> TestSuccess{"Ответ получен?<br/>(Нет RST, тайм-аута, заглушки РКН)"}
+    TryWAN --> TestSuccess{"Response received?<br/>(No RST, timeout, RKN stub)"}
     
-    TestSuccess -- "ДА (Сайт доступен)" --> StreamDirect["Потоковая передача клиенту напрямую"]
+    TestSuccess -- "ДА (Сайт доступен)" --> StreamDirect["Streaming directly to the client"]
     StreamDirect --> Finish
     
-    TestSuccess -- "НЕТ (Блокировка / Сбой)" --> ProbeRace["Параллельный опрос VPN-туннелей (Race)<br/>nwg0, nwg1, tun0..."]
+    TestSuccess -- "НЕТ (Блокировка / Сбой)" --> ProbeRace["Parallel polling of VPN tunnels (Race)<br/>nwg0, nwg1, tun0..."]
     SkipProbe --> ProbeRace
     
-    ProbeRace --> PickWinner["Выбор самого быстрого туннеля"]
-    PickWinner --> LearnKernel["Запись IP/подсети в ipset / NDM<br/>(TTL: 24 часа)"]
-    LearnKernel --> SeamlessRelay["Бесшовная передача ответа клиенту<br/>(страница открывается)"]
+    ProbeRace --> PickWinner["Selecting the fastest tunnel"]
+    PickWinner --> LearnKernel["Record IP/subnet in ipset / NDM<br/>(TTL: 24 hours)"]
+    LearnKernel --> SeamlessRelay["Seamless transmission of response to client<br/>(page opens)"]
     SeamlessRelay --> Finish
 ```
 
 ---
 
-## ⚙️ 3. Режимы маршрутизации (Routing Engines)
+## ⚙️ 3. Routing Engines
 
-В разделе **«Настройки»** панели управления доступно переключение логики работы:
+In the **"Settings"** section of the control panel, you can switch the operating logic:
 
 ```mermaid
 graph LR
-    subgraph Mode1 ["⚡ 1. Гибридный режим (IPSet Fastpath + NDM) — По умолчанию"]
-        A1["Выученный IP"] --> B1["ipset add sr_nwg0 (Ядро Linux)"]
+    subgraph Mode1 ["⚡ 1. Hybrid mode (IPSet Fastpath + NDM) - Default"]
+        A1["Learned IP"] --> B1["ipset add sr_nwg0 (Ядро Linux)"]
         B1 --> C1["iptables MARK + ip rule fwmark"]
-        C1 --> D1["Аппаратный Fastpath (0% CPU)"]
+        C1 --> D1["Hardware Fastpath (0% CPU)"]
     end
 
-    subgraph Mode2 ["🛡️ 2. Нативный режим NDM (Мульти-политики PBR)"]
-        A2["Выученный IP"] --> B2["Запись в Keenetic NDM на все туннели (SR:)"]
-        B2 --> C2["Движок «Приоритетов подключений» KeeneticOS"]
-        C2 --> D2["Каждое устройство идёт строго по своей политике"]
+    subgraph Mode2 ["🛡️ 2. Native NDM mode (Multi-policy PBR)"]
+        A2["Learned IP"] --> B2["Recording in Keenetic NDM for all tunnels (SR:)"]
+        B2 --> C2["KeeneticOS “Connection Priorities” engine"]
+        C2 --> D2["Each device follows strictly its own policy"]
     end
 ```
 
-| Параметр | ⚡ Гибридный режим (IPSet Fastpath) | 🛡️ Нативный режим Keenetic NDM |
+|Parameter|⚡ Hybrid mode (IPSet Fastpath)|🛡️ Native Keenetic NDM mode|
 | :--- | :--- | :--- |
-| **Скорость и нагрузка** | **Максимальная** (аппаратный оффлоад, 0% CPU) | Стандартная скорость маршрутизации KeeneticOS |
-| **Вместимость** | **100 000+ IP и подсетей** без потери скорости | До десятков тысяч маршрутов |
-| **Устаревание (TTL)** | **Автоматическое (24ч)** — ядро само очищает неиспользуемые IP | Очищается фоновым демоном SmartRoute |
-| **Поддержка Мульти-Политик** | Для сетей с единым шлюзом | **Идеально для сложных политик** (ТВ $\rightarrow$ VPN1, ПК $\rightarrow$ VPN2) |
+|**Speed ​​and load**|**Maximum** (hardware offload, 0% CPU)|Standard routing speed KeeneticOS|
+|**Capacity**|**100,000+ IPs and subnets** without loss of speed|Up to tens of thousands of routes|
+|**Targeting (TTL)**|**Automatic (24h)** - the kernel itself clears unused IPs|Cleaned up by the background SmartRoute daemon|
+|**Multi-Policy Support**|For networks with a single gateway|**Ideal for complex policies** (TV $\rightarrow$ VPN1, PC $\rightarrow$ VPN2)|
 
 ---
 
-## 📋 4. Списки доменов и Списки исключений
+## 📋 4. Domain Lists and Exclusion Lists
 
-Управление списками доступно на вкладке **«Списки доменов»**:
+List management is available on the **"Domain Lists"** tab:
 
 ```mermaid
 flowchart TD
-    subgraph Lists ["Типы списков в Smart-Route"]
-        L1["⚡ Fast-Path Списки<br/>(YouTube, Discord, AI, Трекеры)"]
-        L2["🛡️ Списки Исключений<br/>(Россия: .ru, .рф, .su, yandex.net)"]
-        L3["🌐 Онлайн-списки (URL)<br/>(Антизапрет, CensorTracker, v2fly)"]
-        L4["🤖 Авто-перехват (Auto)<br/>(Сайты, заблокированные на лету)"]
+    subgraph Lists ["Types of lists in Smart-Route"]
+        L1["⚡ Fast-Path Lists<br/>(YouTube, Discord, AI, Trackers)"]
+        L2["🛡️ Lists of Exclusions<br/>(Russia: .ru, .rf, .su, yandex.net)"]
+        L3["🌐 Online lists (URL)<br/>(Anti-prohibition, CensorTracker, v2fly)"]
+        L4["🤖 Auto-interception (Auto)<br/>(Sites blocked on the fly)"]
     end
     
-    L1 --> |"Мгновенный Fast-Path в VPN"| RouterAction1["VPN-туннель"]
-    L2 --> |"Блокировка перехвата"| RouterAction2["Прямой интернет (WAN)"]
-    L3 --> |"Автообновление каждые 6-24ч"| RouterAction1
-    L4 --> |"Самообучение при сбоях"| RouterAction1
+    L1 --> |"Instant Fast-Path in VPN"| RouterAction1["VPN tunnel"]
+    L2 --> |"Interception blocking"| RouterAction2["Direct Internet (WAN)"]
+    L3 --> |"Auto update every 6-24 hours"| RouterAction1
+    L4 --> |"Self-learning on failure"| RouterAction1
 ```
 
-### 1. Списки прямого доступа (Fast-Path)
-- Домены и подсети (`youtube.com`, `discord.com`, `openai.com` и др.) направляются в VPN мгновенно, без ожидания таймаута основного провайдера.
+### 1. Direct access lists (Fast-Path)
+- Domains and subnets (`youtube.com`, `discord.com`, `openai.com`, etc.) are sent to the VPN instantly, without waiting for a timeout from the main provider.
 
-### 2. Списки исключений (Direct WAN / Прямой доступ)
-- Если у списка включен тумблер **«🛡️ Список исключений»**:
-  - Все домены, национальные зоны (`.ru`, `.рф`, `.su`) и поддомены (`yandex.net`, `*.yandex.net`, `gosuslugi.ru`) **всегда открываются напрямую через вашего провайдера**.
-  - Демон никогда не пытается направить их в VPN и не засоряет таблицы маршрутизации.
+### 2. Exception lists (Direct WAN / Direct access)
+- If the list has the toggle switch **“🛡️ List of exceptions”** turned on:
+  - All domains, national zones (`.ru`, `.рф`, `.su`) and subdomains (`yandex.net`, `*.yandex.net`, `gosuslugi.ru`) **are always opened directly through your provider**.
+  - The daemon never tries to route them to the VPN and does not clog the routing tables.
 
-### 3. Онлайн-списки из интернета (URL & Каталог пресетов)
-- Поддерживаются ссылки на `raw.githubusercontent.com`, `prostovpn.org`, текстовые файлы `.txt` и `.csv`.
-- В каталоге доступно **30+ популярных пресетов в один клик** (Антизапрет, ITDog Allow2ban, v2fly, торренты, кинотеатры).
-- Если сайт со списком заблокирован у вашего провайдера, Smart-Route автоматически скачает его через резервный VPN-канал.
+### 3. Online lists from the Internet (URL & Preset Directory)
+- Links to `raw.githubusercontent.com`, `prostovpn.org`, text files `.txt` and `.csv` are supported.
+- The catalog contains **30+ popular presets in one click** (Anti-ban, ITDog Allow2ban, v2fly, torrents, cinemas).
+- If a site with a list is blocked by your provider, Smart-Route will automatically download it through a backup VPN channel.
 
 ---
 
-## 🖥️ 5. Обзор разделов Веб-интерфейса
+## 🖥️ 5. Review of sections of the Web interface
 
-Веб-панель управления доступна по адресу `http://172.16.5.1:8088` (или IP вашего роутера):
+The web control panel is available at `http://172.16.5.1:8088` (or your router IP):
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -131,26 +131,26 @@ flowchart TD
 └─────────────┴─────────────┴─────────────┴─────────────┴─────────────┴───────┘
 ```
 
-1. **📊 Дашборд (Обзор)**:
-   - Живые счетчики активных маршрутов, спасенных соединений (Failover), статус туннелей, потребление памяти (всего ~1.3 МБ RAM) и аптайм.
-2. **🌐 Списки доменов**:
-   - Создание, редактирование, загрузка готовых пресетов, включение списков исключений и ручная синхронизация.
-3. **🔀 Динамические маршруты (IPSet)**:
-   - Таблица выученных адресов ядра в реальном времени: целевой IP, домен/SNI, туннель, оставшийся TTL, задержка (Latency) и кнопка удаления.
-4. **🛣️ Маршруты Keenetic (NDM)**:
-   - Полная нативная таблица маршрутизации KeeneticOS со всеми провайдерами, туннелями и метками `SR:`.
-5. **🔌 Сетевые интерфейсы**:
-   - Список сетевых интерфейсов роутера (`nwg0`, `tun0`, `ppp0`...), настройка их приоритетов и кнопка быстрого включения/отключения.
-6. **🩺 Диагностика (Probe)**:
-   - Мгновенный тест любого сайта или IP сразу через **все** доступные интерфейсы с замером задержки и кодов HTTP/TLS.
-7. **⚙️ Настройки**:
-   - Выбор режима работы (Гибридный IPSet vs Нативный NDM), таймауты первичного опроса, порты перехвата и пароль доступа к панели.
+1. **📊 Dashboard (Overview)**:
+   - Live counters of active routes, saved connections (Failover), tunnel status, memory consumption (total ~1.3 MB RAM) and uptime.
+2. **🌐Domain Lists**:
+   - Creation, editing, loading of ready-made presets, inclusion of exclusion lists and manual synchronization.
+3. **🔀 Dynamic routes (IPSet)**:
+   - Table of learned kernel addresses in real time: target IP, domain/SNI, tunnel, remaining TTL, Latency and delete button.
+4. **🛣️ Keenetic Routes (NDM)**:
+   - Complete native KeeneticOS routing table with all providers, tunnels and `SR:` tags.
+5. **🔌 Network interfaces**:
+   - List of router network interfaces (`nwg0`, `tun0`, `ppp0`...), setting their priorities and a quick enable/disable button.
+6. **🩺Diagnostics (Probe)**:
+   - Instant test of any website or IP immediately through **all** available interfaces, measuring latency and HTTP/TLS codes.
+7. **⚙️Settings**:
+   - Selecting the operating mode (Hybrid IPSet vs Native NDM), primary polling timeouts, interception ports and panel access password.
 
 ---
 
-## 🛠️ 6. Команды управления в консоли роутера (SSH)
+## 🛠️ 6. Management commands in the router console (SSH)
 
-Если вам нужно управлять сервисом через командную строку Entware:
+If you need to manage the service via the Entware command line:
 
 ```bash
 # Проверить статус службы
@@ -171,22 +171,22 @@ ipset list sr_nwg0
 
 ---
 
-## 🚀 7. Быстрый старт: 3 простых шага
+## 🚀 7. Quick start: 3 simple steps
 
-1. **Шаг 1**: Откройте `http://172.16.5.1:8088/#interfaces` и убедитесь, что ваши VPN-подключения (например, `nwg0` для WireGuard) включены.
-2. **Шаг 2**: Откройте `http://172.16.5.1:8088/#domain-lists` — по умолчанию основные списки (YouTube, Discord, AI, Исключения РФ) уже активны и готовы к работе.
-3. **Шаг 3**: Пользуйтесь интернетом — все заблокированные ресурсы откроются автоматически и бесшовно!
+1. **Step 1**: Open `http://172.16.5.1:8088/#interfaces` and make sure your VPN connections (eg `nwg0` for WireGuard) are enabled.
+2. **Step 2**: Open `http://172.16.5.1:8088/#domain-lists` - by default, the main lists (YouTube, Discord, AI, RF Exceptions) are already active and ready to go.
+3. **Step 3**: Use the Internet - all blocked resources will open automatically and seamlessly!
 
 ---
 
-## 🗑️ 8. Полное удаление Smart-Route
+## 🗑️ 8. Complete removal of Smart-Route
 
-### Автоматически:
+### Automatically:
 ```bash
-curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/uninstall.sh | sh -s smart-route
+curl -sSL https://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/uninstall.sh | sh -s smart-route
 ```
 
-### Вручную через SSH:
+### Manually via SSH:
 ```bash
 /opt/etc/init.d/S99smart-route stop
 killall -9 smart-route 2>/dev/null

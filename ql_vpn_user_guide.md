@@ -1,93 +1,93 @@
-# 🎮 QuakeLive-VPN — Руководство пользователя и Архитектура
+# 🎮 QuakeLive-VPN - User Guide and Architecture
 
-**QuakeLive-VPN** — это высокоскоростной стелс-туннель нового поколения, сетевой трафик которого полностью замаскирован под реальный мультиплеер культового сетевого шутера **Quake Live** на базе движка **id Tech 3 NetChan**.
-
----
-
-## 🎯 1. В чём главная идея QuakeLive-VPN?
-
-Современные системы глубокого анализа пакетов (ТСПУ / DPI) блокируют стандартные VPN-протоколы (WireGuard, OpenVPN, IPSec) по характерным заголовкам, размерам рукопожатий и энтропии полезной нагрузки.
-
-**QuakeLive-VPN решает эту проблему принципиально иначе:**
-1. **100% маскировка под игровой трафик:** Все пакеты туннеля форматируются в точном соответствии с протоколом Quake Live NetChan (OutOfBand-пакеты `getchallenge`, `challengeResponse`, `connect`, команды `clc_move`, снимки состояний `svc_snapshot` и `svc_packetentities`).
-2. **Абсолютная устойчивость к блокировкам:** Ни один фильтр ТСПУ или DPI не отличает работу VPN от реального сетевого матча игроков на сервере Quake Live.
-3. **Минимальный оверхед и сверхнизкий пинг:** Чистый протокол UDP без многослойного TLS-оверхеда, с аппаратным ускорением шифрования AES-128-GCM и ChaCha20-Poly1305.
-4. **Встроенный игровой скорборд:** Сервер отвечает на стандартные игровые запросы статуса (`getstatus`/`getinfo`), отображая подключенных клиентов как реальных игроков (Sarge, Ranger, Crash) на классической арене Campgrounds (`q3dm6`).
+**QuakeLive-VPN** is a new generation high-speed stealth tunnel, the network traffic of which is completely disguised as the real multiplayer of the cult online shooter **Quake Live** based on the **id Tech 3 NetChan** engine.
 
 ---
 
-## 🚀 2. Быстрая установка сервера на Linux VPS
+## 🎯 1. What is the main idea of ​​QuakeLive-VPN?
 
-### Автоматическая установка в одну команду:
+Modern deep packet analysis (DPI) systems block standard VPN protocols (WireGuard, OpenVPN, IPSec) based on characteristic headers, handshake sizes and payload entropy.
 
-Подключитесь к вашему серверу VPS (Ubuntu, Debian, CentOS, Rocky Linux, Alpine) по SSH и выполните:
+**QuakeLive-VPN solves this problem in a fundamentally different way:**
+1. **100% disguised as game traffic:** All tunnel packets are formatted in strict accordance with the Quake Live NetChan protocol (OutOfBand packets `getchallenge`, `challengeResponse`, `connect`, commands `clc_move`, snapshots `svc_snapshot` and `svc_packetentities`).
+2. **Absolute resistance to blocking:** Not a single TSPU or DPI filter distinguishes the work of a VPN from a real network match of players on a Quake Live server.
+3. **Minimum overhead and ultra-low ping:** Pure UDP protocol without multi-layer TLS overhead, with hardware accelerated AES-128-GCM and ChaCha20-Poly1305 encryption.
+4. **Built-in game scoreboard:** The server responds to standard game status requests (`getstatus`/`getinfo`), displaying connected clients as real players (Sarge, Ranger, Crash) in the classic Campgrounds arena (`q3dm6`).
+
+---
+
+## 🚀 2. Quick server installation on Linux VPS
+
+### Automatic installation in one command:
+
+Connect to your VPS server (Ubuntu, Debian, CentOS, Rocky Linux, Alpine) via SSH and run:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/install-qlvpn.sh | bash
+curl -sSL https://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/install-qlvpn.sh | bash
 ```
 
-*или через универсальный скрипт репозитория:*
+*or through the universal repository script:*
 ```bash
-curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/install.sh | sh -s ql-vpn
+curl -sSL https://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/install.sh | sh -s ql-vpn
 ```
 
-### Что делает скрипт установки:
-1. Автоматически определяет архитектуру процессора сервера (`x86_64` или `aarch64/arm64`).
-2. Запрашивает порты (по умолчанию: игровой UDP `:27960`, веб-панель HTTPS `:8092`) и пароль администратора.
-3. Включает пересылку пакетов в ядре Linux (`net.ipv4.ip_forward = 1`).
-4. Настраивает правила межсетевого экрана `iptables` (NAT MASQUERADE для подсети `10.80.0.0/24`, цепочки FORWARD и порты INPUT).
-5. Загружает оптимизированный бинарник `ql-vpn` в `/usr/local/bin/ql-vpn`.
-6. Создает и запускает системную службу `systemd` (`ql-vpn.service`) с автозапуском при загрузке сервера.
-7. Генерирует первый готовый клиентский токен подключения `qlvpn://...` и выводит итоговую сводку.
+### What the installation script does:
+1. Automatically detects the server's processor architecture (`x86_64` or `aarch64/arm64`).
+2. Requests ports (default: game UDP `:27960`, HTTPS web panel `:8092`) and administrator password.
+3. Enables packet forwarding in the Linux kernel (`net.ipv4.ip_forward = 1`).
+4. Configures `iptables` firewall rules (NAT MASQUERADE for `10.80.0.0/24` subnet, FORWARD chains and INPUT ports).
+5. Loads the optimized `ql-vpn` binary into `/usr/local/bin/ql-vpn`.
+6. Creates and starts the system service `systemd` (`ql-vpn.service`) with autostart when the server boots.
+7. Generates the first ready client connection token `qlvpn://...` and outputs a summary summary.
 
 ---
 
-## 💻 3. Подключение клиента
+## 💻 3. Client connection
 
-### 3.1. Клиент Windows (GUI + Трей)
+### 3.1. Windows Client (GUI + Tray)
 
-1. Запустите `ql-vpn.exe` от имени администратора на вашем компьютере.
-2. Приложение свернется в системный трей Windows (иконка с готической эмблемой Quake Live).
-3. Откройте панель управления (`http://127.0.0.1:8092`) или кликните по иконке в трее.
-4. Вставьте полученный при установке токен `qlvpn://...` и нажмите кнопку **Подключить**.
-5. Выберите режим маршрутизации:
-   - **Весь трафик (0.0.0.0/0):** Весь интернет-трафик вашего ПК защищен и идет через туннель.
-   - **Только игровой трафик:** Перенаправляется только трафик игры Quake Live.
-   - **Пользовательские маршруты:** Укажите конкретные IP-адреса и подсети для обхода блокировок.
+1. Run `ql-vpn.exe` as an administrator on your computer.
+2. The application will minimize to the Windows system tray (an icon with the gothic Quake Live logo).
+3. Open the control panel (`http://127.0.0.1:8092`) or click on the tray icon.
+4. Insert the `qlvpn://...` token received during installation and click the **Connect** button.
+5. Select routing mode:
+   - **All traffic (0.0.0.0/0):** All Internet traffic on your PC is protected and goes through the tunnel.
+   - **Game traffic only:** Only Quake Live game traffic is redirected.
+   - **Custom Routes:** Specify specific IP addresses and subnets to bypass blocking.
 
 > [!TIP]
-> **Управление из трея Windows**:
-> При правом клике по иконке в трее доступны пункты:
-> - «Открыть панель управления»
-> - «Подключить / Отключить»
-> - «Запускать свернутым»
-> - «Выход» — при выходе приложение корректно закрывает окно конфигуратора, безопасно отключает Wintun-адаптер и освобождает системные маршруты, **не затрагивая ваш основной браузер (Google Chrome, Edge)**.
+> **Management through three Windows**:
+> When you right-click on the tray icon, the following items are available:
+> - “Open control panel”
+> - “Connect / Disconnect”
+> - “Run minimized”
+> - “Exit” - when exiting, the application correctly closes the configurator window, safely disables the Wintun adapter and frees system routes, **without affecting your main browser (Google Chrome, Edge)**.
 
-### 3.2. Роутеры Keenetic (Smart-VPN)
+### 3.2. Keenetic routers (Smart-VPN)
 
-Если на роутере установлен пакет **Smart-VPN** (`http://192.168.1.1:8091`):
-1. Перейдите во вкладку **«QuakeLive-VPN»**.
-2. Вставьте токен `qlvpn://...` в поле ввода и нажмите **«Добавить сервер»**.
-3. Роутер установит туннель и сможет направлять домашний трафик через ваш VPS.
+If the **Smart-VPN** package (`http://192.168.1.1:8091`) is installed on the router:
+1. Go to the **"QuakeLive-VPN"** tab.
+2. Paste the `qlvpn://...` token into the input field and click **Add Server**.
+3. The router will establish a tunnel and be able to route home traffic through your VPS.
 
 ---
 
-## ⚙️ 4. Веб-панель управления сервером (HTTPS)
+## ⚙️ 4. Web server control panel (HTTPS)
 
-На сервере VPS функционирует независимый веб-центр администрирования:
+The VPS server has an independent web administration center:
 - **URL:** `https://<IP_сервера>:8092`
-- **Логин:** `admin`
-- **Пароль:** указанный при установке
+- **Login:** `admin`
+- **Password:** specified during installation
 
-### Возможности веб-панели:
-- **Управление токенами:** Создание уникальных ключей доступа для разных игроков и устройств с ограничением времени действия или назначением постоянного виртуального IP (`10.80.0.X`).
-- **Скорборд игроков:** Интерактивная таблица подключенных клиентов со статусом сетевого рукопожатия, пингом, объемом переданного трафика и временем в сети.
-- **Встроенная система самообновления:** При появлении новых релизов в шапке панели появляется бейдж обновления. Обновление бинарника и перезапуск службы выполняются в один клик прямо из браузера.
-- **Интеграция с реальным Quake Live сервером:** Возможность указать IP upstream-сервера для незаметного прозрачного проксирования матчей.
+### Web panel features:
+- **Token management:** Create unique access keys for different players and devices with a time limit or assigning a permanent virtual IP (`10.80.0.X`).
+- **Player board:** Interactive table of connected clients with network handshake status, ping, amount of transmitted traffic and time on the network.
+- **Built-in self-updating system:** When new releases appear, an update badge appears in the panel header. Updating the binary and restarting the service are performed in one click directly from the browser.
+- **Integration with a real Quake Live server:** Ability to specify the IP of the upstream server for inconspicuous and transparent proxying of matches.
 
 ---
 
-## 🛠️ 5. Управление службой на VPS вручную
+## 🛠️ 5. Managing the service on VPS manually
 
 ```bash
 # Проверить статус службы:
@@ -105,11 +105,11 @@ ql-vpn token add -server "ВАШ_IP:27960" -name "PlayerName" -tokens /etc/ql-vp
 
 ---
 
-## 📂 6. Где на VPS находятся все файлы (подробная карта системы)
+## 📂 6. Where are all the files located on the VPS (detailed system map)
 
-После установки на Linux VPS все исполняемые файлы, базы данных, службы автозапуска и системные настройки размещаются по стандартизированным путям Linux:
+After installation on a Linux VPS, all executable files, databases, startup services and system settings are located in standardized Linux paths:
 
-### 🗺️ Иерархия файлов и директорий
+### 🗺️ Hierarchy of files and directories
 
 ```
 /
@@ -135,23 +135,23 @@ ql-vpn token add -server "ВАШ_IP:27960" -name "PlayerName" -tokens /etc/ql-vp
     └── ql-vpn.new                     # ⏳ Временный файл при самообновлении
 ```
 
-### 📄 Детальное описание каждого файла и компонента
+### 📄 Detailed description of each file and component
 
-#### 1. Исполняемый файл сервера: `/usr/local/bin/ql-vpn`
-- **Тип:** Скомпилированный бинарный файл Go (`ELF 64-bit LSB executable`, `x86-64` или `ARM aarch64`), без внешних runtime-зависимостей.
-- **Назначение:**
-  - Работает в фоновом режиме как системный демон сервера (UDP порт `:27960`, веб-панель `:8092`).
-  - Служит CLI-утилитой для управления токенами:
+#### 1. Server executable file: `/usr/local/bin/ql-vpn`
+- **Type:** A compiled Go binary (`ELF 64-bit LSB executable`, `x86-64` or `ARM aarch64`), with no external runtime dependencies.
+- **Purpose:**
+  - Works in the background as a system server daemon (UDP port `:27960`, web panel `:8092`).
+  - Serves as a CLI utility for managing tokens:
     ```bash
     /usr/local/bin/ql-vpn token list -tokens /etc/ql-vpn/tokens.json
     /usr/local/bin/ql-vpn token add -server "IP:27960" -name "Player1" -tokens /etc/ql-vpn/tokens.json
     /usr/local/bin/ql-vpn token del -name "Player1" -tokens /etc/ql-vpn/tokens.json
     ```
-  - При запуске обновления через веб-панель заменяется автоматически на свежую версию из репозитория.
+  - When you launch an update via the web panel, it is automatically replaced with the latest version from the repository.
 
-#### 2. База клиентских токенов: `/etc/ql-vpn/tokens.json`
-- **Тип:** Файл базы данных в формате JSON.
-- **Пример содержимого:**
+#### 2. Client token database: `/etc/ql-vpn/tokens.json`
+- **Type:** Database file in JSON format.
+- **Example content:**
   ```json
   [
     {
@@ -165,11 +165,11 @@ ql-vpn token add -server "ВАШ_IP:27960" -name "PlayerName" -tokens /etc/ql-vp
     }
   ]
   ```
-- **Назначение:** Хранит список клиентов, их pre-shared ключи (PSK), выделенные статические IP-адреса внутри подсети `10.80.0.0/24`, маршруты и время жизни. Любые изменения в веб-панели (создание, удаление токена) мгновенно атомарно синхронизируются с этим файлом.
+- **Purpose:** Stores a list of clients, their pre-shared keys (PSK), allocated static IP addresses within the `10.80.0.0/24` subnet, routes and lifetime. Any changes in the web panel (creation, deletion of a token) are instantly and atomically synchronized with this file.
 
-#### 3. Настройки сервера: `/etc/ql-vpn/qlvpn-server.json`
-- **Тип:** Файл состояния в формате JSON (создается при изменении параметров через веб-панель).
-- **Пример содержимого:**
+#### 3. Server settings: `/etc/ql-vpn/qlvpn-server.json`
+- **Type:** Status file in JSON format (created when changing parameters via the web panel).
+- **Example content:**
   ```json
   {
     "enabled": true,
@@ -180,11 +180,11 @@ ql-vpn token add -server "ВАШ_IP:27960" -name "PlayerName" -tokens /etc/ql-vp
     "upstream_server": ""
   }
   ```
-- **Назначение:** Обеспечивает персистентность настроек веб-панели (порты, пароль администратора, TLS-шифрование и адрес upstream-сервера Quake Live).
+- **Purpose:** Provides persistence of web panel settings (ports, administrator password, TLS encryption and Quake Live upstream server address).
 
-#### 4. Служба Systemd: `/etc/systemd/system/ql-vpn.service`
-- **Тип:** Стандартный юнит-файл службы инициализации systemd.
-- **Содержимое:**
+#### 4. Systemd service: `/etc/systemd/system/ql-vpn.service`
+- **Type:** Standard systemd init service unit file.
+- **Content:**
   ```ini
   [Unit]
   Description=QuakeLive-VPN Server and Web Control Daemon
@@ -200,53 +200,53 @@ ql-vpn token add -server "ВАШ_IP:27960" -name "PlayerName" -tokens /etc/ql-vp
   [Install]
   WantedBy=multi-user.target
   ```
-- **Назначение:** Обеспечивает автоматический запуск сервиса при загрузке ОС и непрерывный мониторинг процесса (перезапуск через 3 секунды при сбое или штатном перезапуске).
+- **Purpose:** Provides automatic start of the service when the OS boots and continuous monitoring of the process (restart after 3 seconds in case of failure or normal restart).
 
-#### 5. Пересылка пакетов ядра (Sysctl): `/etc/sysctl.d/99-qlvpn.conf`
-- **Содержимое:**
+#### 5. Kernel Packet Forwarding (Sysctl): `/etc/sysctl.d/99-qlvpn.conf`
+- **Content:**
   ```ini
   net.ipv4.ip_forward = 1
   ```
-- **Назначение:** Активирует пересылку IPv4-пакетов на уровне ядра Linux между виртуальным туннелем `qlvpn0` и внешним физическим интерфейсом сервера (`eth0` / `ens3`).
+- **Purpose:** Enables forwarding of IPv4 packets at the Linux kernel level between the virtual tunnel `qlvpn0` and the external physical interface of the server (`eth0` / `ens3`).
 
-#### 6. Правила файрвола (IPTables): `/etc/iptables/rules.v4`
-- **Назначение:** Сохраняет правила трансляции сетевых адресов:
+#### 6. Firewall rules (IPTables): `/etc/iptables/rules.v4`
+- **Purpose:** Saves network address translation rules:
   - **NAT MASQUERADE:** `iptables -t nat -A POSTROUTING -s 10.80.0.0/24 ! -d 10.80.0.0/24 -j MASQUERADE`
-  - **FORWARD:** пропуск пакетов между `10.80.0.0/24` и внешним интерфейсом.
-  - **INPUT:** открытие входящих портов UDP `:27960` и TCP `:8092`.
+  - **FORWARD:** allows packets to pass between `10.80.0.0/24` and the external interface.
+  - **INPUT:** opens incoming ports UDP `:27960` and TCP `:8092`.
 
-#### 7. Сетевой виртуальный интерфейс TUN: `qlvpn0`
-- **Тип:** Виртуальное сетевое устройство ядра Linux (`/dev/net/tun`).
-- **Параметры:** IP `10.80.0.1/24`.
-- **Просмотр:** `ip addr show qlvpn0` или `ip -s link show dev qlvpn0`.
+#### 7. Network virtual interface TUN: `qlvpn0`
+- **Type:** Linux kernel virtual network device (`/dev/net/tun`).
+- **Options:** IP `10.80.0.1/24`.
+- **View:** `ip addr show qlvpn0` or `ip -s link show dev qlvpn0`.
 
 ---
 
-### 📋 Шпаргалка по полезным командам администратора
+### 📋 Cheat sheet on useful admin commands
 
-| Операция | Команда на сервере VPS |
+|Operation|Command to VPS servers|
 | :--- | :--- |
-| **Проверить статус службы** | `systemctl status ql-vpn` |
-| **Перезапустить сервер** | `systemctl restart ql-vpn` |
-| **Смотреть журнал событий онлайн** | `journalctl -u ql-vpn -f` |
-| **Последние 50 строк журнала** | `journalctl -u ql-vpn -n 50 --no-pager` |
-| **Просмотреть базу токенов** | `cat /etc/ql-vpn/tokens.json` |
-| **Создать токен вручную** | `/usr/local/bin/ql-vpn token add -server "IP:27960" -name "Sarge" -tokens /etc/ql-vpn/tokens.json` |
-| **Удалить токен** | `/usr/local/bin/ql-vpn token del -name "Sarge" -tokens /etc/ql-vpn/tokens.json` |
-| **Проверить сетевой туннель** | `ip addr show qlvpn0` |
-| **Проверить счетчики NAT-трафика** | `iptables -t nat -L POSTROUTING -n -v` |
-| **Полное удаление сервера с VPS** | `curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/uninstall.sh \| sh -s ql-vpn` |
+|**Check service status**| `systemctl status ql-vpn` |
+|**Restart server**| `systemctl restart ql-vpn` |
+|**View event log online**| `journalctl -u ql-vpn -f` |
+|**Last 50 lines of log**| `journalctl -u ql-vpn -n 50 --no-pager` |
+|**View token database**| `cat /etc/ql-vpn/tokens.json` |
+|**Create a token manually**| `/usr/local/bin/ql-vpn token add -server "IP:27960" -name "Sarge" -tokens /etc/ql-vpn/tokens.json` |
+|**Remove token**| `/usr/local/bin/ql-vpn token del -name "Sarge" -tokens /etc/ql-vpn/tokens.json` |
+|**Check network tunnel**| `ip addr show qlvpn0` |
+|**Check NAT traffic counters**| `iptables -t nat -L POSTROUTING -n -v` |
+|**Complete removal of server from VPS**| `curl -sSL https://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/uninstall.sh \| sh -s ql-vpn` |
 
 ---
 
-## 🗑️ 6. Полное удаление QuakeLive-VPN с сервера VPS
+## 🗑️ 6. Complete removal of QuakeLive-VPN from the VPS server
 
-### Автоматически:
+### Automatically:
 ```bash
-curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/uninstall.sh | sh -s ql-vpn
+curl -sSL https://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/uninstall.sh | sh -s ql-vpn
 ```
 
-### Вручную:
+### Manually:
 ```bash
 systemctl stop ql-vpn && systemctl disable ql-vpn
 killall -9 ql-vpn 2>/dev/null

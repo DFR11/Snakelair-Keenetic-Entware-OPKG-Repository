@@ -10,19 +10,19 @@ if [ "$PACKAGE" = "uninstall" ] || [ "$PACKAGE" = "remove" ] || [ "$PACKAGE" = "
     if [ -f "${SCRIPT_DIR}/uninstall.sh" ]; then
         exec sh "${SCRIPT_DIR}/uninstall.sh" "$@"
     else
-        curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/uninstall.sh | sh -s -- "$@"
+        curl -sSL https://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/uninstall.sh | sh -s -- "$@"
         exit $?
     fi
 fi
 
 # Special handling for ql-vpn (QuakeLive-VPN Server for Linux VPS)
 if [ "$PACKAGE" = "ql-vpn" ] || [ "$PACKAGE" = "qlvpn" ]; then
-    printf "\033[1;34m[*]\033[0m Запуск установщика QuakeLive-VPN Server (Linux VPS)...\n"
+    printf "\033[1;34m[*]\033[0m Starting QuakeLive-VPN Server (Linux VPS) installer...\n"
     SCRIPT_DIR="$(dirname "$0")"
     if [ -f "${SCRIPT_DIR}/install-qlvpn.sh" ]; then
         exec bash "${SCRIPT_DIR}/install-qlvpn.sh" "$@"
     else
-        curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/install-qlvpn.sh | bash -s -- "$@"
+        curl -sSL https://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/install-qlvpn.sh | bash -s -- "$@"
         exit $?
     fi
 fi
@@ -30,9 +30,9 @@ fi
 # 1. Check Entware environment (for Keenetic router OPKG packages)
 if [ ! -d "/opt/bin" ] || [ ! -x "/opt/bin/opkg" ]; then
     printf "\033[1;31m[ERROR] Entware не установлена или /opt/bin/opkg не найден!\033[0m\n"
-    printf "Для установки пакетов роутера (smart-utils, smart-route, smart-photo, smart-vpn) требуется среда Entware.\n"
-    printf "Если вы хотите установить сервер QuakeLive-VPN на VPS, выполните:\n"
-    printf "  curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/install-qlvpn.sh | bash\n\n"
+    printf "To install router packages (smart-utils, smart-route, smart-photo, smart-vpn), the Entware environment is required.\n"
+    printf "If you want to install QuakeLive-VPN server on VPS, run:\n"
+    printf "  curl -sSL https://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/install-qlvpn.sh | bash\n\n"
     exit 1
 fi
 
@@ -81,7 +81,7 @@ fi
 SELECTED_PORT="$DEFAULT_PORT"
 if ( exec 3>/dev/tty 4</dev/tty ) 2>/dev/null; then
     exec 3>/dev/tty 4</dev/tty
-    printf "\033[1;33m[?]\033[0m Порт веб-интерфейса [%s]: " "$DEFAULT_PORT" >&3
+    printf "\033[1;33m[?]\033[0m Web interface port [%s]:" "$DEFAULT_PORT" >&3
     read -r USER_INPUT <&4 || USER_INPUT=""
     exec 3>&- 4<&-
     USER_INPUT=$(echo "$USER_INPUT" | tr -dc '0-9')
@@ -89,11 +89,11 @@ if ( exec 3>/dev/tty 4</dev/tty ) 2>/dev/null; then
         SELECTED_PORT="$USER_INPUT"
     fi
 fi
-printf "\033[1;34m[*]\033[0m Порт веб-интерфейса: \033[1;37m%s\033[0m\n" "$SELECTED_PORT"
+printf "\033[1;34m[*]\033[0m Port to web interface: \033[1;37m%s\033[0m\n" "$SELECTED_PORT"
 
 # 4. Configure OPKG repository feed
 FEED_CONF="/opt/etc/opkg/keenetic.conf"
-REPO_URL="https://raw.githubusercontent.com/snakelair/Keenetic/main/entware/${ENT_ARCH}"
+REPO_URL="https://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/entware/${ENT_ARCH}"
 
 printf "\033[1;34m[*]\033[0m Configuring OPKG repository feed: \033[0;36m%s\033[0m...\n" "$REPO_URL"
 mkdir -p /opt/etc/opkg
@@ -208,28 +208,28 @@ fi
 
 # 8. Start / Restart service safely
 if [ -x "/opt/etc/init.d/S99smart-utils" ] && [ "$PACKAGE" = "smart-utils" ]; then
-    printf "\033[1;34m[*]\033[0m Перезапуск службы Smart-Utils...\n"
+    printf "\033[1;34m[*]\033[0m Restarting the Smart-Utils service...\n"
     /opt/etc/init.d/S99smart-utils restart >/dev/null 2>&1 || {
         killall -9 smart-utils >/dev/null 2>&1
         sleep 1
         /opt/etc/init.d/S99smart-utils start >/dev/null 2>&1
     }
 elif [ -x "/opt/etc/init.d/S99smart-route" ] && [ "$PACKAGE" = "smart-route" ]; then
-    printf "\033[1;34m[*]\033[0m Перезапуск службы Smart-Route...\n"
+    printf "\033[1;34m[*]\033[0m Restarting the Smart-Route service...\n"
     /opt/etc/init.d/S99smart-route restart >/dev/null 2>&1 || {
         killall -9 smart-route >/dev/null 2>&1
         sleep 1
         /opt/etc/init.d/S99smart-route start >/dev/null 2>&1
     }
 elif [ -x "/opt/etc/init.d/S99smart-photo" ] && [ "$PACKAGE" = "smart-photo" ]; then
-    printf "\033[1;34m[*]\033[0m Перезапуск службы Smart-Photo...\n"
+    printf "\033[1;34m[*]\033[0m Restarting the Smart-Photo service...\n"
     /opt/etc/init.d/S99smart-photo restart >/dev/null 2>&1 || {
         killall -9 smart-photo >/dev/null 2>&1
         sleep 1
         /opt/etc/init.d/S99smart-photo start >/dev/null 2>&1
     }
 elif [ -x "/opt/etc/init.d/S99smart-vpn" ] && [ "$PACKAGE" = "smart-vpn" ]; then
-    printf "\033[1;34m[*]\033[0m Перезапуск службы Smart-VPN...\n"
+    printf "\033[1;34m[*]\033[0m Restarting the Smart-VPN service...\n"
     /opt/etc/init.d/S99smart-vpn restart >/dev/null 2>&1 || {
         killall -9 smart-vpn >/dev/null 2>&1
         sleep 1
@@ -278,18 +278,18 @@ fi
 if [ $INSTALL_RES -eq 0 ]; then
     printf "\n\033[1;32m================================================================================\033[0m\n"
     if [ -n "$ACTIVE_VER" ]; then
-        printf "\033[1;32m [OK] %s v%s успешно запущен и работает!\033[0m\n" "$PKG_TITLE" "$ACTIVE_VER"
+        printf "\033[1;32m [OK] %s v%s successfully launched and running!\033[0m\n" "$PKG_TITLE" "$ACTIVE_VER"
     else
-        printf "\033[1;32m [OK] Установка %s завершена успешно!\033[0m\n" "$PKG_TITLE"
+        printf "\033[1;32m [OK] Installation of %s completed successfully!\033[0m\n" "$PKG_TITLE"
     fi
     if [ -n "$ROUTER_MODEL" ]; then
-        printf " \033[1;37mРоутер:\033[0m     \033[1;36m%s\033[0m\n" "$ROUTER_MODEL"
+        printf "\033[1;37mRouter:\033[0m \033[1;36m%s\033[0m\n" "$ROUTER_MODEL"
     fi
     printf " \033[1;37mВеб-панель:\033[0m \033[1;36mhttp://%s:%s\033[0m\n" "$LAN_IP" "$SELECTED_PORT"
     printf "\033[1;32m================================================================================\033[0m\n\n"
 else
     printf "\n\033[1;31m================================================================================\033[0m\n"
-    printf "\033[1;31m [ERROR] Ошибка установки %s. Пожалуйста, проверьте вывод выше.\033[0m\n" "$PKG_TITLE"
+    printf "\033[1;31m [ERROR] Error installing %s. Please check the output above.\033[0m\n" "$PKG_TITLE"
     printf "\033[1;31m================================================================================\033[0m\n\n"
     exit 1
 fi

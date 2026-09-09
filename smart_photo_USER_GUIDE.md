@@ -1,68 +1,68 @@
-# 📘 Руководство пользователя Smart-Photo
+# 📘 Smart-Photo User Guide
 
-**Smart-Photo** — персональный фотосервер и просмотрщик для роутеров Keenetic с USB-накопителями и средой Entware.
+**Smart-Photo** is a personal photo server and viewer for Keenetic routers with USB drives and Entware environment.
 
 ---
 
-## 1. Начало работы
+## 1. Getting started
 
-### Шаг 1: Подключение USB-накопителя к Keenetic
-1. Подключите USB-флешку или внешний HDD/SSD к USB-порту роутера Keenetic.
-2. В веб-интерфейсе роутера Keenetic (в разделе «Сетевые диски и USB») убедитесь, что диск смонтирован.
-3. По умолчанию в Entware точка монтирования находится в `/tmp/mnt/` (например, `/tmp/mnt/DISK_NAME/Photos`).
+### Step 1: Connecting a USB drive to Keenetic
+1. Connect a USB flash drive or external HDD/SSD to the USB port of the Keenetic router.
+2. In the Keenetic router web interface (in the “Network drives and USB” section), make sure that the drive is mounted.
+3. The default mount point in Entware is `/tmp/mnt/` (for example, `/tmp/mnt/DISK_NAME/Photos`).
 
-### Шаг 2: Установка Smart-Photo
-Выполните через SSH-консоль роутера:
+### Step 2: Install Smart-Photo
+Execute through the SSH console of the router:
 ```bash
-curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/install.sh | sh -s smart-photo
+curl -sSL https://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/install.sh | sh -s smart-photo
 ```
 
-### Шаг 3: Открытие веб-интерфейса
-Откройте браузер и перейдите по адресу:
+### Step 3: Open the web interface
+Open your browser and go to:
 👉 `http://192.168.1.1:8089`
 
 ---
 
-## 2. Настройка папки с фото и кэша
+## 2. Setting up a photo folder and cache
 
-Перейдите на вкладку **⚙️ Настройки**:
-1. **Папка с фотографиями**: укажите путь к каталогу с вашими фото на USB-диске (например: `/tmp/mnt/USB_DRIVE/DCIM` или `/tmp/mnt/USB_DRIVE/Photos`).
-2. **Размещение кэша**:
-   - *В корне папки с фото (`.smartphoto/thumbs`)*: рекомендуется! Миниатюры сохраняются прямо на флешке, не расходуют память роутера и не пересоздаются при перезагрузках.
-   - *Пользовательский путь*: можно указать конкретную папку (например `/opt/var/cache/smart-photo`).
-3. **Потоки генерации миниатюр (CPU Throttle)**:
-   - Для роутеров с MIPS процессором (Viva, Extra, Speedster, Omni, Giga) рекомендуется **1-2 потока**.
-   - Для Hero, Titan, Ultra, Peak можно установить **2-4 потока**.
-4. Нажмите **«Сохранить настройки»**.
-
----
-
-## 3. Использование фотопросмотрщика
-
-### Бесконечная фотолента (Infinite Timeline)
-- Фотографии автоматически выстраиваются в хронологическом порядке сверху вниз от самых свежих к старым.
-- При прокрутке страницы вниз новые фотографии подгружаются автоматически без задержек.
-- При прокрутке на экране отображаются липкие заголовки с датой съёмки.
-
-### Полноэкранный просмотрщик (Lightbox)
-- Клик по любой фотографии открывает её в полноэкранном режиме с затемнением фона.
-- **Масштабирование**: крутите колёсико мыши или нажимайте кнопки `+` и `-` для детального изучения фото.
-- **Панорамирование**: зажмите левую кнопку мыши на увеличенном фото и перемещайте его.
-- **Поворот**: кнопка поворота или клавиша позволяет повернуть снимок на 90 градусов.
-- **Слайд-шоу**: нажмите кнопку `Play` или клавишу `Пробел`, чтобы включить автоматический показ слайдов.
-- **Сведения о снимке (EXIF)**: нажмите кнопку `(i)` или клавишу `I` на клавиатуре. Откроется боковая панель с параметрами камеры (выдержка, ISO, диафрагма, модель объектива) и GPS-координатами с кнопкой перехода на карту.
-
-### Горячие клавиши:
-- `Влево` / `Вправо` — предыдущее / следующее фото.
-- `Esc` — закрыть полноэкранный режим.
-- `Пробел` — включить / выключить слайд-шоу.
-- `I` — открыть / скрыть панель параметров EXIF.
-- `+` / `-` — увеличить / уменьшить фото.
-- `0` — сбросить масштаб на 100%.
+Go to the **⚙️Settings** tab:
+1. **Folder with photos**: specify the path to the directory with your photos on the USB drive (for example: `/tmp/mnt/USB_DRIVE/DCIM` or `/tmp/mnt/USB_DRIVE/Photos`).
+2. **Cache location**:
+   - *At the root of the photo folder (`.smartphoto/thumbs`)*: recommended! Thumbnails are saved directly on the flash drive, do not consume the router’s memory and are not recreated during reboots.
+   - *Custom path*: You can specify a specific folder (for example `/opt/var/cache/smart-photo`).
+3. **Thumbnail generation threads (CPU Throttle)**:
+   - For routers with a MIPS processor (Viva, Extra, Speedster, Omni, Giga) **1-2 streams** are recommended.
+   - For Hero, Titan, Ultra, Peak you can install **2-4 streams**.
+4. Click **Save Settings**.
 
 ---
 
-## 4. Управление службой на роутере через SSH
+## 3. Using the photo viewer
+
+### Infinite Timeline
+- Photos are automatically arranged in chronological order from top to bottom from newest to oldest.
+- When you scroll down the page, new photos are loaded automatically without delay.
+- As you scroll, sticky titles with the shooting date appear on the screen.
+
+### Full screen viewer (Lightbox)
+- Clicking on any photo opens it in full screen mode with the background darkened.
+- **Zoom**: Roll the mouse wheel or press the `+` and `-` buttons to view the photo in detail.
+- **Panning**: hold down the left mouse button on the enlarged photo and move it.
+- **Rotate**: The rotate button or key allows you to rotate the photo 90 degrees.
+- **Slide Show**: Press the `Play` button or the `Пробел` button to enable automatic slide show.
+- **Photo Details (EXIF)**: Press the `(i)` button or the `I` key on your keyboard. A side panel will open with camera parameters (shutter speed, ISO, aperture, lens model) and GPS coordinates with a button to go to the map.
+
+### Hotkeys:
+- `Влево` / `Вправо` - previous / next photo.
+- `Esc` — close full screen mode.
+- `Пробел` — enable/disable the slideshow.
+- `I` — open/hide the EXIF ​​options panel.
+- `+` / `-` — enlarge / reduce the photo.
+- `0` — reset the scale to 100%.
+
+---
+
+## 4. Managing the service on the router via SSH
 
 ```bash
 # Запуск службы
@@ -80,14 +80,14 @@ curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/install.sh |
 
 ---
 
-## 5. Полное удаление Smart-Photo
+## 5. Complete removal of Smart-Photo
 
-### Автоматически:
+### Automatically:
 ```bash
-curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/uninstall.sh | sh -s smart-photo
+curl -sSL https://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/uninstall.sh | sh -s smart-photo
 ```
 
-### Вручную через SSH:
+### Manually via SSH:
 ```bash
 /opt/etc/init.d/S99smart-photo stop
 killall -9 smart-photo 2>/dev/null

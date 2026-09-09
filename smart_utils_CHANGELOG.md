@@ -1,222 +1,222 @@
 # 📦 Smart-Utils Changelog
 
-Все важные изменения проекта Smart-Utils документируются в этом файле.
+All important changes to the Smart-Utils project are documented in this file.
 
 ## [1.0.29] - 2026-09-03
 
-### Полноценный модуль управления планировщиком задач Cron
-- **Управление службой планировщика (Crond)**:
-  - Мониторинг статуса службы `crond` в реальном времени, отображение PID и пути к файлу расписания.
-  - Кнопки управления демоном: «Запустить», «Остановить», «Перезапустить».
-  - Автоматическая инициализация окружения `/opt/var/spool/cron/crontabs` и стартового скрипта при первом запуске.
-- **Визуальный список и карточки задач**:
-  - Тумблеры мгновенного включения и отключения задач (комментирование/раскомментирование строки `#`).
-  - Человекочитаемый перевод расписания на русский язык (*«Каждые 5 мин.»*, *«Каждый день в 04:00»*, *«По будням»*, *«При каждой загрузке роутера (@reboot)»*).
-  - Быстрое копирование команды в буфер обмена.
-- **Интерактивный конструктор расписания и шаблоны (Presets)**:
-  - Быстрый выбор частоты (каждую минуту, каждые 5/15/30 мин, каждый час, ежедневно, еженедельно, ежемесячно, @reboot или произвольное выражение).
-  - Каталог готовых системных шаблонов для Keenetic (очистка `/tmp`, бэкап настроек, синхронизация времени NTP, обновление списков Smart-Route, проверка OPKG, watchdog, плановая перезагрузка).
-- **Тестовый запуск команды (▶ Тест)**:
-  - Возможность мгновенно запустить команду любой задачи прямо из веб-панели и просмотреть вывод консоли, stdout/stderr, код возврата и время выполнения.
-- **Прямой редактор Crontab (Raw Editor)**:
-  - Вкладка прямого редактирования файла `crontab` с подсказками по синтаксису и валидацией.
+### A full-fledged module for managing the Cron task scheduler
+- **Managing the scheduler service (Crond)**:
+  - Real-time monitoring of `crond` service status, displaying PID and schedule file path.
+  - Daemon control buttons: “Start”, “Stop”, “Restart”.
+  - Automatic initialization of the `/opt/var/spool/cron/crontabs` environment and start script upon first launch.
+- **Visual list and task cards**:
+  - Toggle switches for instantly enabling and disabling tasks (commenting/uncommenting the line `#`).
+  - Human-readable translation of the schedule into Russian (*“Every 5 minutes.”*, *“Every day at 04:00”*, *“On weekdays”*, *“At every boot of the router (@reboot)”*).
+  - Quickly copy a command to the clipboard.
+- **Interactive schedule designer and templates (Presets)**:
+  - Quickly select frequency (every minute, every 5/15/30 minutes, every hour, daily, weekly, monthly, @reboot or custom expression).
+  - Catalog of ready-made system templates for Keenetic (cleaning `/tmp`, backup settings, NTP time synchronization, updating Smart-Route lists, checking OPKG, watchdog, scheduled reboot).
+- **Test run of the command (▶ Test)**:
+  - The ability to instantly run a command for any task directly from the web panel and view the console output, stdout/stderr, return code and execution time.
+- **Crontab Raw Editor**:
+  - Tab for direct editing of the `crontab` file with syntax tips and validation.
 
 ## [1.0.28] - 2026-09-03
 
 
-### Интерактивный установщик и валидация через API
-- **Интерактивный выбор порта**:
-  - Установщик `install.sh` запрашивает желаемый порт веб-интерфейса (по умолчанию `8090`), проверяя предыдущие настройки роутера.
-  - Настройка порта автоматически сохраняется в конфигурационном файле сервиса.
-- **Проверка реального ответа API и синхронный перезапуск**:
-  - Установщик синхронно перезапускает службу и опрашивает `/api/status`, подтверждая готовность веб-панели и выводя точную версию и модель роутера.
-- **Оформление консоли установщика**:
-  - Добавлен верхний отступ и ANSI-цветовая подсветка статусов `[OK]`, `[ERROR]`, `[*]`, ссылок и разделителей.
-  - Устранено дублирование адреса веб-интерфейса.
+### Interactive installer and API validation
+- **Interactive port selection**:
+  - The `install.sh` installer requests the desired web interface port (default `8090`), checking the previous router settings.
+  - The port setting is automatically saved in the service configuration file.
+- **Checking real API response and synchronous restart**:
+  - The installer synchronously restarts the service and polls `/api/status`, confirming the readiness of the web panel and displaying the exact version and model of the router.
+- **Installer console design**:
+  - Added top indentation and ANSI color highlighting for `[OK]`, `[ERROR]`, `[*]` statuses, links and separators.
+  - Duplicate web interface address has been eliminated.
 
 ## [1.0.27] - 2026-09-03
 
 
-### Динамическая загрузка Changelog и оптимизация модального окна обновлений
-- **Автоматическая загрузка описания новой версии из репозитория**:
-  - Бэкенд и фронтенд теперь динамически запрашивают свежий `CHANGELOG.md` из удаленного репозитория GitHub при проверке обновлений.
-  - Окно обновления всегда отображает точный список изменений новой доступной версии, даже если на роутере установлена предыдущая версия бинарника.
+### Dynamic loading of Changelog and optimization of modal update window
+- **Automatically downloading a description of the new version from the repository**:
+  - The backend and frontend now dynamically request the latest `CHANGELOG.md` from the remote GitHub repository when checking for updates.
+  - The update window always displays the exact list of changes of the new available version, even if the previous version of the binary is installed on the router.
 
 ## [1.0.26] - 2026-09-03
 
 
-### Улучшение веб-терминала и кросс-архитектурная совместимость
-- **Мульти-архитектурная поддержка PTY (ARM, AArch64, MIPS, x86_64)**:
-  - Реализован кросс-архитектурный перебор кодов `ioctl` (`TIOCGPTN` / `TIOCSPTLCK`) и безопасный fallback при вызовах `Setctty`/`Setsid`.
-  - Принудительный интерактивный режим (`-i`) для всех оболочек (`sh`, `ash`, `bash`), предотвращающий мгновенное закрытие сессии.
-  - Атомарная упаковка WebSocket-фреймов и защитные задержки перед закрытием сокета.
-  - Улучшенная диагностика ошибок WebSocket и быстрый Reconnect по нажатию клавиши Enter.
-- **Идеальное форматирование и отступы**:
-  - Скорректированы переносы строк в баннерах подключения NDM CLI и Linux/SSH (аккуратный одинарный отступ перед выводом версии и приглашением командной строки).
+### Improved web terminal and cross-architecture compatibility
+- **Multi-architecture PTY support (ARM, AArch64, MIPS, x86_64)**:
+  - Implemented cross-architectural enumeration of `ioctl` (`TIOCGPTN` / `TIOCSPTLCK`) codes and safe fallback when calling `Setctty`/`Setsid`.
+  - Force interactive mode (`-i`) for all shells (`sh`, `ash`, `bash`), preventing instant session closure.
+  - Atomic packaging of WebSocket frames and protective delays before closing the socket.
+  - Improved diagnostics of WebSocket errors and fast Reconnect by pressing the Enter key.
+- **Perfect formatting and indentation**:
+  - Line breaks in the NDM CLI and Linux/SSH connection banners have been adjusted (neat single indentation before the version output and the command line prompt).
 
 ## [1.0.25] - 2026-09-03
 
 
-### Повышение отказоустойчивости OPKG и установщика install.sh
-- **Встроенная самодиагностика и восстановление базы OPKG (Auto-Healing)**:
-  - Скрипт `install.sh` и веб-интерфейс `Smart-Utils` автоматически сканируют базу пакетов `/opt/lib/opkg/status` и выявляют незавершенные/поврежденные установки других пакетов (например, `smart-route` или `smart-photo` с отсутствующими `.postinst` файлами).
-  - Автоматически генерируются валидные заглушки скриптов настройки, что предотвращает фатальные ошибки OPKG с кодами `127` (*postinst not found*) и `255`.
-- **Автосинхронизация репозиториев и бесшовный перезапуск**:
-  - Улучшен фоновый опрос репозитория и мгновенная перезагрузка интерфейса после установки обновлений.
+### Improving fault tolerance of OPKG and install.sh installer
+- **Built-in self-diagnosis and restoration of the OPKG (Auto-Healing) database**:
+  - The `install.sh` script and `Smart-Utils` web interface automatically scan the `/opt/lib/opkg/status` package database and identify incomplete/corrupt installations of other packages (for example, `smart-route` or `smart-photo` with missing `.postinst` files).
+  - Valid configuration script stubs are automatically generated, which prevents fatal OPKG errors with codes `127` (*postinst not found*) and `255`.
+- **Auto-synchronization of repositories and seamless restart**:
+  - Improved background polling of the repository and instant reboot of the interface after installing updates.
 
 ## [1.0.24] - 2026-09-03
 
 
-### Автоматическое обновление репозитория & Бесшовный самоапдейт
-- **Устранено мигание старой версии при обновлении страницы (F5)**:
-  - Удалены устаревшие жестко закодированные версии в шаблонах `index.html`.
-- **Фоновая периодическая синхронизация репозитория**:
-  - `Smart-Utils` автоматически выполняет синхронизацию репозитория в фоне каждые 30 минут (`opkgMgr.StartBackgroundFeedSync`), а также принудительно запрашивает свежие данные при открытии окна обновлений (`/api/version/check?refresh=true`). Новые обновления теперь появляются автоматически без ручного запуска `opkg update`.
-- **Мгновенное и корректное обновление интерфейса после самообновления**:
-  - После завершения установки пакета `smart-utils` служба немедленно обновляет бейдж версии в шапке, скрывает значок доступного обновления и выполняет чистую перезагрузку страницы.
+### Automatic repository update & Seamless self-update
+- **Fixed old version blinking when refreshing page (F5)**:
+  - Removed obsolete hard-coded versions in `index.html` templates.
+- **Background periodic synchronization of the repository**:
+  - `Smart-Utils` automatically synchronizes the repository in the background every 30 minutes (`opkgMgr.StartBackgroundFeedSync`), and also forces a request for fresh data when opening the update window (`/api/version/check?refresh=true`). New updates now appear automatically without manually launching `opkg update`.
+- **Instant and correct interface update after self-update**:
+  - Once the installation of the `smart-utils` package is complete, the service immediately updates the version badge in the header, hides the available update icon, and performs a clean page reload.
 
 ## [1.0.23] - 2026-09-03
 
 
-### Управление службами: Мониторинг CPU и Фоновое автообновление
-- **Индикация нагрузки CPU и оперативной памяти для каждой службы**:
-  - Интеграция `ServicesManager` с `SystemAnalyzer` для точного замера реального потребления CPU (`%`) и RAM (`RSS`) каждым запущенным демоном и его дочерними процессами.
-  - На карточках служб отображаются интерактивные чипы метрик: `⚡ CPU: X.X%`, `💾 RAM: X.X MB` и `⏱️ PID: XXX`.
-- **Фоновое автообновление состояния служб**:
-  - Добавлен переключатель `Авто (3с)` с живым пульсирующим индикатором на панели служб.
-  - Автоматическое плавное обновление статусов процессов и потребления ресурсов без сброса фокуса или поисковых фильтров при нахождении во вкладке.
+### Service Management: CPU Monitoring and Background Auto-Update
+- **Indication of CPU and RAM load for each service**:
+  - Integration of `ServicesManager` with `SystemAnalyzer` to accurately measure the actual CPU (`%`) and RAM (`RSS`) consumption of each running daemon and its child processes.
+  - Service cards display interactive metric chips: `⚡ CPU: X.X%`, `💾 RAM: X.X MB` and `⏱️ PID: XXX`.
+- **Background auto-update of service status**:
+  - Added `Авто (3с)` switch with live pulsating indicator on the services panel.
+  - Automatic smooth updating of process statuses and resource consumption without resetting focus or search filters when in a tab.
 
 ## [1.0.22] - 2026-09-03
 
 
-### Дисковые накопители & Дедупликация разделов
-- **Очистка списка дисков и накопителей**:
-  - Исключен системный образ прошивки `/` (`/dev/root` squashfs, 100% full), не являющийся пользовательским накопителем.
-  - Реализована дедупликация файловых систем по `Device ID`: устранено дублирование между `/opt`, UUID-идентификаторами и понятными метками томов.
-  - Приоритет отдается пользовательским именам разделов `/tmp/mnt/<Label>` (например, `/tmp/mnt/Opkg`, `/tmp/mnt/Seagate Expansion Drive`), сохраняя реальные устройства (`/dev/sda2`, `/dev/sdb1`).
-  - В блоке отображаются только реальные хранилища: `/tmp` (RAM), `/storage` (внутренняя память) и уникальные подключенные USB-накопители.
+### Disk Drives & Partition Deduplication
+- **Clearing the list of disks and drives**:
+  - The system firmware image `/` (`/dev/root` squashfs, 100% full), which is not a user drive, has been excluded.
+  - Deduplication of file systems by `Device ID` has been implemented: duplication between `/opt`, UUID identifiers and clear volume labels has been eliminated.
+  - Priority is given to custom partition names `/tmp/mnt/<Label>` (e.g. `/tmp/mnt/Opkg`, `/tmp/mnt/Seagate Expansion Drive`), preserving real devices (`/dev/sda2`, `/dev/sdb1`).
+  - The block displays only real storages: `/tmp` (RAM), `/storage` (internal memory) and unique connected USB drives.
 
 ## [1.0.21] - 2026-09-03
 
 
-### Дисковые накопители & Примонтированные разделы /tmp/mnt/
-- **Отображение всех подключенных USB-накопителей и разделов**:
-  - Добавлено сканирование и вывод всех точек монтирования `/tmp/mnt/*` (USB-диски, флешки, внешние HDD/SSD в KeeneticOS), а также раздела `/storage` (внутренняя память).
-  - Улучшено отображение разделов в блоке **«Дисковые накопители & Разделы»**: добавлены специализированные иконки (💽 USB-накопители, 📦 `/opt`, ⚡ `/storage`, 📁 root) с наглядным прогресс-баром и процентом заполнения.
+### Disk Drives & Mounted Partitions /tmp/mnt/
+- **Displays all connected USB drives and partitions**:
+  - Added scanning and output of all `/tmp/mnt/*` mount points (USB drives, flash drives, external HDD/SSD in KeeneticOS), as well as the `/storage` partition (internal memory).
+  - Improved display of partitions in the **"Disk Drives & Partitions"** block: added specialized icons (💽 USB drives, 📦 `/opt`, ⚡ `/storage`, 📁 root) with a visual progress bar and fill percentage.
 
 ## [1.0.20] - 2026-09-02
 
 
-### Раздел «Поблагодарить автора» & Поддержка проекта
-- **Новый раздел «💖 Поблагодарить автора» (`#tab-donate`)**:
-  - Расположен в навигации интерфейса для удобной добровольной поддержки разработки.
-  - Поддержка прямого перевода через **Т-Банк** ([tbank.ru/cf/4m4egy66JAy](https://www.tbank.ru/cf/4m4egy66JAy)) — перевод на сбор средств без комиссии через СБП, карты и приложения любых банков РФ.
-  - Поддержка перевода через **ЮMoney** (банковские карты РФ МИР/Visa/Mastercard, СБП, T-Pay, SberPay, кошелек ЮMoney `4100119618359414`).
-  - Поддержка сервиса **Boosty.to** ([boosty.to/snake_lair/donate](https://boosty.to/snake_lair/donate)) — разовые донаты и регулярные подписки с любых банковских карт мира и РФ.
-  - Кнопки быстрого копирования реквизитов (кошелька ЮMoney, ссылок Т-Банк и Boosty) в буфер обмена.
-  - Быстрые ссылки с выбором комфортной суммы пожертвования (150 ₽ ☕, 300 ₽ 🍕, 500 ₽ 🚀, 1000 ₽ 👑).
-  - Карточка экосистемы проектов линейки Smart (**Smart-Route**, **Smart-Photo**, **Smart-Utils**) со ссылками на репозитории.
+### Section “Thank the author” & Project support
+- **New section “💖 Thank the author” (`#tab-donate`)**:
+  - Located in the interface navigation for convenient voluntary development support.
+  - Support for direct transfer through **T-Bank** ([tbank.ru/cf/4m4egy66JAy](https://www.tbank.ru/cf/4m4egy66JAy)) - transfer for fundraising without commission through SBP, cards and applications of any banks in the Russian Federation.
+  - Support for transfers via **UMoney** (Russian bank cards MIR/Visa/Mastercard, SBP, T-Pay, SberPay, UMoney wallet `4100119618359414`).
+  - Support for the **Boosty.to** service ([boosty.to/snake_lair/donate](https://boosty.to/snake_lair/donate)) - one-time donations and regular subscriptions from any bank cards in the world and the Russian Federation.
+  - Buttons for quickly copying details (UMoney wallet, T-Bank and Boosty links) to the clipboard.
+  - Quick links with a choice of a comfortable donation amount (150 ₽ ☕, 300 ₽ 🍕, 500 ₽ 🚀, 1000 ₽ 👑).
+  - Map of the ecosystem of Smart line projects (**Smart-Route**, **Smart-Photo**, **Smart-Utils**) with links to repositories.
 
 
 
 ## [1.0.19] - 2026-08-28
 
 
-### Раздел «Диагностика» & Самодиагностика системы (System Doctor)
-- **Новый раздел «🩺 Диагностика» (`#tab-diagnostics`)**:
-  - Расположен в навигации между **«Журналом»** и **«Настройками»**.
-- **🩺 Самодиагностика системы (System Doctor)**:
-  - Автоматическая проверка версии ядра Keenetic, памяти RAM/Swap, раздела `/opt` (Read-Write), среды OPKG и фидов репозиториев, скриптов служб `/opt/etc/init.d/`, портов SSH и Web UI, DNS резолва и хранилища бэкапов.
-  - Сводка со счетчиками (`УСПЕШНО`, `ПРЕДУПРЕЖДЕНИЯ`, `ОШИБКИ`), кнопка копирования отчета в буфер обмена для поддержки и просмотр системных выводов ядра (Raw Outputs).
-- **🌐 Сетевой инструмент проверки узлов (Diagnostic Prober)**:
-  - Проверка доступности любых интернет-узлов, сайтов или IP-портов (методы `AUTO`, `GET`, `HEAD`, `TCP`).
-  - Пресеты быстрого тестирования (`google.com`, `icanhazip.com`, `github.com`, `repo.entware.net`, `cloudflare.com`, `1.1.1.1:53`).
-  - Замер задержек (TCP handshake, TLS handshake, TTFB), определение TLS сертификатов, статус-кодов, заголовков и сниппета ответа.
+### “Diagnostics” section & System self-diagnosis (System Doctor)
+- **New section “🩺Diagnostics” (`#tab-diagnostics`)**:
+  - Located in the navigation between **Journal** and **Settings**.
+- **🩺 System self-diagnosis (System Doctor)**:
+  - Automatic check of Keenetic kernel version, RAM/Swap memory, `/opt` section (Read-Write), OPKG environment and repository feeds, `/opt/etc/init.d/` service scripts, SSH and Web UI ports, DNS resolve and backup storage.
+  - Summary with counters (`УСПЕШНО`, `ПРЕДУПРЕЖДЕНИЯ`, `ОШИБКИ`), button to copy the report to the clipboard for support and viewing kernel system outputs (Raw Outputs).
+- **🌐 Network node checking tool (Diagnostic Prober)**:
+  - Checking the availability of any Internet nodes, sites or IP ports (methods `AUTO`, `GET`, `HEAD`, `TCP`).
+  - Quick testing presets (`google.com`, `icanhazip.com`, `github.com`, `repo.entware.net`, `cloudflare.com`, `1.1.1.1:53`).
+  - Measuring delays (TCP handshake, TLS handshake, TTFB), determining TLS certificates, status codes, headers and response snippets.
 
 ## [1.0.18] - 2026-08-28
 
 
 ### Real-Time Live System Logs Terminal (SmartRoute Style)
-- **Модернизированный журнал событий в стиле SmartRoute**:
-  - Панель управления: фильтрация по уровню логов (`ALL`, `INFO`, `SUCCESS`, `WARN`, `ERROR`, `DEBUG`), живой текстовый поиск `input`.
-  - Чекбокс **Автопрокрутка**, кнопки **Очистить**, **Обновить** и **Скачать журнал** (`.log` файл).
-  - Стилизованные терминальные строки `.log-line` с отметкой времени `log-ts`, бейджем уровня `log-lvl` и тегами модулей `log-tag`.
-  - Увеличен кольцевой буфер до 1000 записей и добавлены API эндпоинты `POST /api/logs/clear` и `GET /api/logs/download`.
+- **Upgraded event log in SmartRoute style**:
+  - Control panel: filtering by log level (`ALL`, `INFO`, `SUCCESS`, `WARN`, `ERROR`, `DEBUG`), live text search `input`.
+  - **Autoscroll** checkbox, **Clear**, **Update** and **Download log** buttons (`.log` file).
+  - Styled terminal strings `.log-line` with timestamp `log-ts`, level badge `log-lvl` and module tags `log-tag`.
+  - The ring buffer has been increased to 1000 entries and API endpoints `POST /api/logs/clear` and `GET /api/logs/download` have been added.
 
 ## [1.0.17] - 2026-08-28
 
 
 ### Fix Web Bind Address
-- **Удален лишний параметр привязки IP (Bind Address)**:
-  - Сервер всегда слушает на всех локальных интерфейсах `0.0.0.0`.
-  - Поле скрыто из формы настроек для упрощения конфигурации.
+- **Removed extra IP binding parameter (Bind Address)**:
+  - The server is always listening on all local interfaces `0.0.0.0`.
+  - The field is hidden from the settings form to simplify configuration.
 
 ## [1.0.16] - 2026-08-28
 
 
-### Индикатор обновлений, Чейнджлог и 1-Click Обновление
-- **Индикатор новой версии в шапке**:
-  - Рядом с номером текущей версии в шапке появляется анимированный пульсирующий бейдж `⚡ Доступно обновление: vX.X.X` при наличии более свежей версии в репозитории.
-- **Модальное окно с историей изменений (Changelog)**:
-  - По клику на индикатор открывается диалог со сравнением версий и списком изменений с текущей версии до доступной.
-- **1-Click обновление прямо из шапки**:
-  - Кнопка «🚀 Обновить сейчас» запускает безопасное обновление пакета через OPKG с отображением прогресса и автоматической перезагрузкой веб-страницы.
+### Update Indicator, Changelog and 1-Click Update
+- **New version indicator in the header**:
+  - An animated pulsating badge `⚡ Доступно обновление: vX.X.X` appears next to the current version number in the header if there is a more recent version in the repository.
+- **Modal window with change history (Changelog)**:
+  - Clicking on the indicator opens a dialog with a comparison of versions and a list of changes from the current version to the available one.
+- **1-Click update directly from the header**:
+  - The "🚀 Update Now" button triggers a secure package update via OPKG, displaying progress and automatically reloading the web page.
 
 ## [1.0.15] - 2026-08-28
 
 ### Dynamic Page Title with Router Model
-- **Динамический заголовок вкладки браузера**:
-  - Заголовок страницы обновлен на формат `Smart-Utils | Keenetic <Модель>` (например, `Smart-Utils | Keenetic Giga (KN-1011)`).
+- **Dynamic browser tab title**:
+  - The page title has been updated to `Smart-Utils | Keenetic <Модель>` format (for example, `Smart-Utils | Keenetic Giga (KN-1011)`).
 
 ## [1.0.14] - 2026-08-28
 
 ### Multi-Column Settings Grid & Interactive Folder Picker (SmartPhoto Style)
-- **Многоколоночная сетка настроек**:
-  - Раздел «Настройки» переведен на адаптивную сетку с карточками: «Веб-интерфейс и Сеть», «Каталоги и Накопители», «Терминал и Логирование».
-- **Интерактивный проводник выбора папок (Folder Picker)**:
-  - Модальное окно с быстрыми корнями (`/opt`, `/tmp/mnt`, `/tmp`, `/media`, `/`), навигацией «Вверх» и выбором директорий в 1 клик для стартового пути файлового менеджера и каталога бэкапов.
-- **Бэкенд-эндпоинт**: добавлен легковесный маршрут `GET /api/system/browse`.
+- **Multi-column settings grid**:
+  - The “Settings” section has been switched to an adaptive grid with cards: “Web interface and Network”, “Directories and Drives”, “Terminal and Logging”.
+- **Interactive Folder Picker**:
+  - Modal window with quick roots (`/opt`, `/tmp/mnt`, `/tmp`, `/media`, `/`), “Top” navigation and 1-click directory selection for the starting path of the file manager and backup directory.
+- **Backend endpoint**: added lightweight route `GET /api/system/browse`.
 
 ## [1.0.13] - 2026-08-28
 
 ### Fix Navigation Tab Twitching & Scrollbar Overflow
-- **Устранение дерганья высоты кнопок навигации**:
-  - Задана постоянная высота `36px` и постоянная рамка `1px solid transparent; box-sizing: border-box`, исключающая сдвиг макета при переключении табов.
-- **Устранение горизонтального скроллбара**:
-  - Оптимизированы отступы меню и компактный бэдж счетчика доступных обновлений OPKG.
+- **Elimination of navigation button height jerking**:
+  - A constant height `36px` and a constant frame `1px solid transparent; box-sizing: border-box` have been set to prevent the layout from shifting when switching tabs.
+- **Elimination of horizontal scrollbar**:
+  - The menu indents and the compact badge for the counter of available OPKG updates have been optimized.
 
 ## [1.0.12] - 2026-08-28
 
 ### Animated OPKG Loading State & URL Hash Tab Persistence on F5
-- **Анимация загрузки каталога пакетов OPKG**:
-  - Анимированный спиннер с описанием статуса и 6 мерцающих Skeleton Cards (shimmer effect).
-- **URL Hash маршрутизация и сохранение вкладки при F5**:
-  - Синхронизация хэша в URL (`#system`, `#files`, `#services`, `#terminal-cli`, `#terminal-ssh`, `#opkg`, `#backup`, `#logs`, `#settings`) и автоматическое переоткрытие при обновлении страницы.
+- **Animation of loading the OPKG package catalog**:
+  - An animated spinner with a description of the status and 6 flickering Skeleton Cards (shimmer effect).
+- **URL Hash routing and saving tab with F5**:
+  - Hash synchronization in URL (`#system`, `#files`, `#services`, `#terminal-cli`, `#terminal-ssh`, `#opkg`, `#backup`, `#logs`, `#settings`) and automatic re-opening when the page is refreshed.
 
 ## [1.0.11] - 2026-08-28
 
 ### Clean Trailing Control Characters & NUL Bytes in Router Model
-- **Санитизация системных строк**:
-  - Очистка нулевых байтов (`\x00`) и ASCII управляющих символов из Device Tree (`/proc/device-tree/model`) на стороне бэкенда и фронтенда.
+- **System string sanitization**:
+  - Clearing null bytes (`\x00`) and ASCII control characters from Device Tree (`/proc/device-tree/model`) on the backend and frontend.
 
 ## [1.0.10] - 2026-08-28
 
 ### Clean Semantic Package Version Comparison
-- **Семантическое сравнение версий пакетов (`comparePkgVersions`)**:
-  - Пакет отмечается требующим обновления (`has_upgrade: true`) строго при условии `AvailableVersion > InstalledVersion`. Исключены ложные предложения даунгрейда.
+- **Semantic comparison of package versions (`comparePkgVersions`)**:
+  - The package is marked as requiring updating (`has_upgrade: true`) strictly under the condition `AvailableVersion > InstalledVersion`. False downgrade offers have been eliminated.
 
 ## [1.0.9] - 2026-08-28
 
 ### Remote Access Safe Self-Update
-- **Безопасное удаленное обновление smart-utils**:
-  - `prerm` не останавливает сервис во время upgrade, а `postinst` запускает отложенный фоновый перезапуск демона (`sleep 2; restart &`).
+- **Secure smart-utils remote update**:
+  - `prerm` does not stop the service during upgrade, and `postinst` starts a delayed background restart of the daemon (`sleep 2; restart &`).
 
 ## [1.0.0] - 2026-08-28
 
-### Первый стабильный релиз
-- **Веб-Терминал:** PTY/TTY консоль через WebSocket с поддержкой ANSI-цветов и хоткеев.
-- **Двухпанельный Total Commander:** горячие клавиши, встроенный редактор, архиватор `.tar.gz`/`.zip`, `chmod`, Drag-and-Drop.
-- **Менеджер OPKG:** управление фидами, 1-клик пресеты репозиториев, поиск и установка пакетов.
-- **Мониторинг CPU и системы:** загрузка по ядрам, RAM/Swap, диски, сетевые интерфейсы, убийство процессов.
-- **Бэкап и восстановление:** экспорт пакетов и конфигураций `/opt/etc/`.
+### First stable release
+- **Web Terminal:** PTY/TTY console via WebSocket with support for ANSI colors and hotkeys.
+- **Two-panel Total Commander:** hotkeys, built-in editor, archiver `.tar.gz`/`.zip`, `chmod`, Drag-and-Drop.
+- **OPKG Manager:** feed management, 1-click repository presets, search and installation of packages.
+- **CPU and system monitoring:** loading by core, RAM/Swap, disks, network interfaces, killing processes.
+- **Backup and restore:** export of packages and configurations `/opt/etc/`.
 
