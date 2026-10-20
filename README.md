@@ -1,28 +1,163 @@
-# ⚡ Snakelair Keenetic Entware OPKG存储库 **Snakelair Keenetic Entware OPKG存储库**-安装了**Entware**环境的**Keenetic**路由器的**OPKG**包存储库。
---## 📦 存储库中的可用软件包 1. 🛠️ `智能实用工具（v1.0.29） **通用的基于web的系统管理和路由器管理Keenetic：** -**双面板文件管理器：**经典的Total Commander风格界面，F3–F10热键，带语法高亮显示的全屏配置编辑器，归档器（tar.gz/zip），更改访问权限（chmod）以及将文件直接拖放到浏览器。
--**两个网络终端：** -**CLI终端：**直接控制KeeneticOS命令行（`ndmc`/`（config）>`）。
--**SSH终端：**访问Linux/Entware Shell会话（`/opt/bin/sh`，`/opt/bi/bash`），完全支持颜色和热键。
--**OPKG包管理器：**存储库/提要目录，流行存储库目录，实时搜索和描述子包，安装、删除、更新包和输出日志。
--**系统和CPU分析器：**CPU负载、内核、内存、交换、磁盘和网络流量的实时图表，以及带有排序和信号管理（SIGTERM/SIGKILL）的交互式进程表（“top”/“htop”）。
--**备份和还原：**导出/导入OPKG包列表，创建和回滚配置档案`/opt/etc/`。
--**日志记录：**安全登录RAM（RAM `/tmp/smart-utils.log`），而不会耗尽闪存驱动器。
--**网页界面：**`http://192.168.1.1:8090`（或路由器的IP） - [📘 **Smart Utils用户指南（Smart_Utils_User_Guide.md）**]（Smart_tils_User_gGuide.md） --2. ⚡ `智能路由（v1.0.66） **用于动态多接口路由、无缝拦截故障连接（故障转移中继）和硬件内核卸载（IPSet/NDM）的系统服务：** -在出现故障和阻塞的情况下自动选择最快的VPN通道（竞争/顺序）。
--Linux内核的硬件卸载（路由器处理器上的负载为0%）。
--支持排除列表（.ru、.ruф、银行、政府服务）以直接访问广域网。
--内置核心Sing box、Xray、Shadowsocks、WireGuard。
--**网页界面：**`http://192.168.1.1:8088` - [📘 **完整的智能路由用户指南（Smart_Route_User_Guide.md）**]（Smart_oute_User_Guide.md） --3. 📷 `智能照片（v1.0.39） **Google Photos风格的个人家庭照片服务器直接安装在Keenetic路由器上，用于连接USB驱动器：** -一个无休止的照片历史提要（无限滚动），具有快速显示功能。
--扫描和查看USB连接的存储设备（闪存驱动器、HDD、SSD）中的照片和视频。
--即时生成和缓存缩略图。
--全屏查看器（Lightbox），可缩放、幻灯片放映和查看EXIF​​元数据（相机、快门速度、光圈、GPS）。
--按日期、文件夹和相册自动分组。
--**网页界面：**`http://192.168.1.1:8089` - [📷 **智能照片用户指南（Smart_Photo_User_Guide.md）**]（Smart_Photo_User_Guide.md） --4. 🛡️ `智能vpn（v1.0.27） **适用于所有类型VPN连接和Keenetic路由器反审查引擎的统一网络管理中心：** -**原生KeeneticOS隧道：**WireGuard、SSTP、OpenVPN、IPsec，带有异步轮询和状态缓存。
--**AmneziaWG（AWG 2.0/3.0）支持：**完全混淆控制（Jc、Jmin/Jmax、S1-S4、H1-H4）、反TSPU预设和Curve25519公钥计算。
--**QuakeLive VPN隐形协议：**基于id Tech 3 NetChan的游戏VPN，带有玩家记分牌、探测保护和令牌生成。
--**Sing Box子系统：**可视化设计器，带有7个选项卡（VLESS Reality、ShadowTLS v3、Trojan）、CPU监视器和配置验证器。
--**通过SSH在VPS上部署：**通过选择web端口，一键自动配置远程服务器。
--**网页界面：**`http://192.168.1.1:8091`（或路由器的IP） - [🛡️ **智能VPN用户指南（User_Guide.md）**](https://github.com/snakelair/SmartVpn/blob/main/USER_GUIDE.md) --5. 🎮 `ql-vpn（v1.0.65） **基于id Tech 3 NetChan（Quake Live）协议的新一代高速隐形隧道：** -**100%屏蔽网络流量：**数据包与真实的Quake Live网络多人游戏无法区分，能够抵抗流量分析和DPI签名阻止。
--**平台支持：**Linux VPS（服务器/网关）和Windows（带系统托盘和GUI的客户端）。
--**超低ping：**直接UDP隧道、AES-128-GCM和ChaCha20-Poly1305硬件加密。
--**独立网络控制中心：**用于监控玩家、生成`qlvpn://`令牌、测量延迟和管理路由的网络界面（：8092）。
--**内置自更新系统：**直接从web界面一键自动更新二进制文件和服务。
--**网络界面：**`https://<ip-сервера>：8092` - [🎮 **QuakeLive VPN用户指南（ql_VPN_User_Guide.md）**]（ql_vpne_User_guire.md）-VPS上的文件安装、架构和详细映射 --## 🚀 快速安装 1.自动安装（在一个命令中）： 通过SSH连接到路由器（或VPS）并运行： ```bash #智能工具（Веб-панель，Терминалы，Файловыйменеджер，OPKG）： 卷曲-sSLhttps://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/install.sh|sh-s智能实用程序 #Установить智能路线： 卷曲-sSLhttps://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/install.sh|sh-s智能路线 #智能照片（USB）： 卷曲-sSLhttps://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/install.sh|sh-s智能照片 #Установить智能VPN（WireGuard、AWG、Sing box、QuakeLive VPNнароутер）： 卷曲-sSLhttps://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/install.sh|sh-s智能vpn #QuakeLive VPN服务器（Linux虚拟专用服务器）： 卷曲-sSLhttps://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/install-qlvpn.sh| bash # или через универсальный установщик: 卷曲-sSLhttps://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/install.sh|sh-s ql vpn ``` --2.手动连接OPKG存储库： 在`/opt/etc/opkg/keetic.conf`中创建一个存储库配置文件： ```bash ARCH=$（未修订-m|sed's/mips/mipsel-3.4/'|sed's/aarch64/aarch64-3.10/'|ssed's/armv7l/armv7-3.2/'） echo“src/gz敏锐的自定义https://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/entware/${ARCH}“>/opt/etc/opkg/keetic.conf # Обновите список пакетов и установите нужные сервисы: opkg更新 opkg安装智能实用程序 opkg安装智能路由 opkg安装智能照片 opkg安装智能vpn ``` --## 🔄 软件包更新 ```bash opkg更新&opkg升级智能utils智能路由智能照片智能vpn ``` --## 🗑️ 完全删除包和存储库 1.一个命令自动删除： ```bash # Интерактивное меню удаления: 卷曲-sSLhttps://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/uninstall.sh|sh # Быстрое удаление конкретного пакета (с очисткой службы, правил и конфигов): 卷曲-sSLhttps://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/uninstall.sh|sh-s智能实用程序 卷曲-sSLhttps://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/uninstall.sh|sh-s智能路线 卷曲-sSLhttps://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/uninstall.sh|sh-s智能照片 卷曲-sSLhttps://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/uninstall.sh|sh-s智能vpn 卷曲-sSLhttps://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/uninstall.sh|sh-s ql vpn #斯洛伐克石油公司： 卷曲-sSLhttps://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/uninstall.sh|sh-s全部 ``` --2.通过SSH控制台手动删除： <详情> <summary><b>🛠️ "оговыекомандыручногалениякаждогепакета</b></summary> ####删除“智能实用程序”： ```bash /opt/etc/init.d/S99smart-utils停止 killall-9智能实用程序2>/dev/null opkg remove smart utils--强制删除--强制依赖 rm-f/opt/etc/init.d/S99smart-utils/tmp/smart-utils.log/opt/var/log/smart-uutils.log rm-rf/opt/etc/smart-utils ``` ####删除“智能路由”： ```bash /opt/etc/init.d/S99智能路由停止 killall-9智能路由2>/dev/null opkg移除智能路由--强制移除--强制依赖 rm-f/opt/etc/init.d/S99smart-route/tmp/smart-route.log/opt/var/log/smart-rute.log rm-rf/opt/etc/智能路由 #Сбросправилiptablesиipset： iptables-t nat-D预路由-p tcp-m多端口--dports 80443-j REDIRECT--到端口10880 2>/dev/null iptables-t nat-D预路由-p udp--dport 53-j重新路由--到端口10853 2>/dev/null 对于$中的s（ipset列表-n2>/dev/null|grep-E'^sr_'）；执行ipset刷新“$s”；ipset销毁“$s”；完成了 ``` ####删除“智能照片”： ```bash /opt/etc/init.d/S99smart-photo stop killall-9智能照片2>/dev/null opkg删除智能照片--强制删除--强制取决于 rm-f/opt/etc/init.d/S99smart-photo/tmp/smart-photo.log/opt/var/log/smart-pphoto.log rm-rf/opt/etc/smart photo/opt/var/cache/smart photo ``` ####删除“智能vpn”： ```bash /opt/etc/init.d/S99smart-vpn停止 killall-9智能vpn唱歌盒awg2>/dev/null opkg删除智能vpn--强制删除--强制依赖 rm-f/opt/etc/init.d/S99smart-vpn/tmp/smart-vpn.log/opt/var/log/smart-v
+ Snakelair, Keenetic, Entware, OPKG Repository
+
+Snakelair Keenetic Entware OPKG Repository – an OPKG repository for Keenetic routers that have Entware installed.
+📦 Available Packages in the Repository
+1. 🛠️ smart-utils (v1.0.43)
+
+A versatile web-based system for managing and controlling a Keenetic router.
+
+    A two-pane file manager: a classic interface reminiscent of Total Commander, with hotkeys F3-F10, a full-screen configuration editor with syntax highlighting, an archiver (tar.gz/zip), and the ability to change file permissions (chmod) and drag-and-drop files directly into the browser.
+    Two web terminals:
+        CLI Terminal: Direct command-line control for KeeneticOS ( ndmc / (config)> ).
+        SSH Terminal: Access to Linux/Entware shell sessions ( /opt/bin/sh , /opt/bin/bash ) with full color support and keyboard shortcuts.
+    OPKG package manager: repository/feed catalog, a catalog of popular repositories with live search and descriptions of dependent packages, package installation, removal, and updates, with real-time log output.
+    System and CPU Analyzer: real-time graphs of CPU, cores, memory, swap, disk, and network traffic, as well as an interactive process table ( top / htop ) with sorting and signal control (SIGTERM/SIGKILL).
+    Backup and Restore: Export/import of the OPKG package list, creation and reversion of configuration archives.
+    Logging: Safe logging to RAM (RAM /tmp/smart-utils.log ) without wearing out flash storage.
+    Web interface: http://192.168.1.1:8001 (or your router's IP address)
+    📘 Smart-Utils User Guide (smart_utils_user_guide.md)
+
+2. ⚡ smart-route (v1.0.229)
+
+System-level service for dynamic multi-interface routing, seamless failover connection interception, and hardware-based kernel offloading (IPSet/NDM):
+
+    Automatic selection of the fastest VPN channel during outages and restrictions (Race/Sequential).
+    Hardware offload kernel for Linux (0% CPU utilization on router).
+    Support for exclusion lists (.ru, .рф, banks, government services) for direct WAN access.
+    Built-in cores: Sing-box, Xray, Shadowsocks, WireGuard.
+    Web interface: http://192.168.1.1:8002
+    📘 Smart-Route User Guide (smart_route_user_guide.md)
+
+3. 📷 smart-photo (v1.0.165)
+
+A personal home photo server, similar to Google Photos, directly on your Keenetic router, for USB storage devices:
+
+    Infinite scroll with fast loading.
+    Scanning and viewing photos and videos from USB drives (flash drives, HDDs, SSDs).
+    Instant generation and caching of thumbnails while browsing.
+    Full-screen viewer with zoom, slideshow, and EXIF metadata viewing (camera, shutter speed, aperture, GPS).
+    Automatic grouping by date, folder, and album.
+    Web interface: http://192.168.1.1:8003
+    📷 Smart-Photo User Guide (smart_photo_USER_GUIDE.md)
+
+4. 🛡️ smart-vpn (v1.0.144)
+
+A unified web center for managing all types of VPN connections and anti-censorship modules for Keenetic routers.
+
+    Native KeeneticOS tunnels: WireGuard, SSTP, OpenVPN, IPsec with asynchronous polling and status caching.
+    Support for AmneziaWG (AWG 2.0 / 3.0): full control over obfuscation (Jc, Jmin/Jmax, S1-S4, H1-H4), presets for "Anti-TSP," and calculation of Curve25519 public keys.
+    QuakeLive-VPN Stealth Protocol: An ID Tech 3-based VPN with an in-game scoreboard, anti-cheat features, and token generation.
+    Sing-Box Subsystem: A visual constructor with 7 tabs (VLESS Reality, ShadowTLS v3, Trojan), CPU Watchdog, and a configuration validator.
+    Deployment on VPS via SSH: Automatically configure your remote server with a single click, choosing your preferred web portal.
+    Web interface: http://192.168.1.1:8004 (or your router's IP address)
+    🛡️ Smart-VPN User Guide (USER_GUIDE.md)
+
+5. 🎮 ql-vpn (v1.0.144)
+
+High-speed stealth tunnel of the next generation, based on the id Tech 3 NetChan (Quake Live) protocol.
+
+    100% network traffic masking: packets are indistinguishable from real Quake Live network traffic, resistant to TSPU analysis and DPI signature blocking.
+    Supported Platforms: Linux VPS (server/gateway) and Windows (client with system tray and GUI).
+    Ultra-low latency: direct UDP tunneling, hardware-accelerated AES-128-GCM and ChaCha20-Poly1305 encryption.
+    Autonomous web-based control center: web interface (:8005) for monitoring players, token generation ( qlvpn:// ), latency measurement, and routing management.
+    Built-in self-updating system: automatic updates for the binary and service with a single click, directly from the web interface.
+    Web interface: https://<ip-сервера>:8005
+    🎮 QuakeLive-VPN User Guide (ql_vpn_user_guide.md) – Installation, architecture, and detailed file map on a VPS
+
+6. 📹 smart-nvr (version 1.0.0)
+
+A high-performance video surveillance gateway and video conferencing system for Hiseeu/Xiongmai recorders and iCSee cameras.
+
+    Live video and archive streaming: secure access to cameras and NVR from an external network via the internet (KeenDNS, VPN, WAN) without direct port forwarding.
+    0% transcoding: The router's processor is not used for decoding; H.264/H.265 playback is handled by the client.
+    Network discovery for security cameras: scans your home network in 1.5 seconds, identifying models, serial numbers, and adding devices with a single click.
+    Web interface: http://172.16.1.1:8006 (or your router's IP address)
+
+🚀 Quick Installation
+1. Automatic installation (for a single team):
+
+Connect to the router (or VPS) via SSH and execute:
+
+# Интерактивное меню установки всех компонентов экосистемы:
+curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/install.sh | sh
+
+# Или прямая установка конкретного пакета:
+# Установить Smart-Utils (Веб-панель, Терминалы, Файловый менеджер, OPKG):
+curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/install.sh | sh -s smart-utils
+
+# Установить Smart-Route (Маршрутизация и обход блокировок):
+curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/install.sh | sh -s smart-route
+
+# Установить Smart-Photo (Персональная фотогалерея на USB):
+curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/install.sh | sh -s smart-photo
+
+# Установить Smart-VPN (WireGuard, AWG, Sing-box, QuakeLive-VPN на роутер):
+curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/install.sh | sh -s smart-vpn
+
+# Установить SmartNVR (Шлюз видеонаблюдения Hiseeu/iCSee и веб-центр NVR):
+curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/install.sh | sh -s smart-nvr
+
+# Установить QuakeLive-VPN Server (на Linux VPS / удаленный сервер):
+curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/install-qlvpn.sh | bash
+# или через универсальный установщик:
+curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/install.sh | sh -s ql-vpn
+
+2. Manual connection to the OPKG repository:
+
+Create a repository configuration file at /opt/etc/opkg/snakelair.conf :
+
+ARCH=$(opkg print-architecture 2>/dev/null | grep -v 'all' | sort -k3 -n | tail -1 | awk '{print $2}')
+[ -z "$ARCH" ] && ARCH=$(uname -m | sed 's/aarch64/aarch64-3.10/' | sed 's/armv7l/armv7-3.2/' | sed 's/mips$/mips-3.4/' | sed 's/mipsel/mipsel-3.4/')
+echo "src/gz snakelair https://raw.githubusercontent.com/snakelair/Keenetic/main/entware/${ARCH}" > /opt/etc/opkg/snakelair.conf
+
+# Обновите список пакетов и установите нужные сервисы:
+opkg update
+opkg install smart-utils
+opkg install smart-route
+opkg install smart-photo
+opkg install smart-vpn
+opkg install smart-nvr
+
+🔄 Package Updates
+
+opkg update && opkg upgrade smart-utils smart-route smart-photo smart-vpn smart-nvr
+
+🗑️ Complete deletion of packages and repositories
+1. Automatic deletion in a single command:
+
+# Интерактивное меню удаления:
+curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/uninstall.sh | sh
+
+# Быстрое удаление конкретного пакета (с очисткой службы, правил и конфигов):
+curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/uninstall.sh | sh -s smart-utils
+curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/uninstall.sh | sh -s smart-route
+curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/uninstall.sh | sh -s smart-photo
+curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/uninstall.sh | sh -s smart-vpn
+curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/uninstall.sh | sh -s ql-vpn
+
+# Полное удаление ВСЕХ пакетов Snakelair и отключение репозитория OPKG:
+curl -sSL https://raw.githubusercontent.com/snakelair/Keenetic/main/uninstall.sh | sh -s all
+
+2. Manual removal via SSH console:
+🛠️ Step-by-step manual removal instructions for each package
+
+🌐 Keenetic Model Compatibility and Architecture Alignment
+Architecture 	Keenetic routers
+mipsel-3.4 	Viva, Extra, Speedster, Giga (KN-1010/1011), Omni, Skipper, Air, Buddy
+armv7-3.2 	Hero (KN-1011/KN-1012), Titan (KN-1810), Giant (KN-2610), Ultra (KN-1810)
+aarch64-3.10 	Peak (KN-2710), Ultra (KN-1811), Titan (KN-1812), Hero 4G+ (KN-2311)
+x86_64 	x86 Entware / Virtual Machines
+mips-3.4 	Giga SE (KN-2410), Keenetic MIPS Big-Endian (QCA9563/QCA9558)
+📱 Android and Android TV Apps
+
+For quick installation, scan the QR code with your smartphone's camera or click the direct APK link:
+App 	Description 	Download APK 	QR code for the camera
+🎮 QuakeLive-VPN 	A stealth-focused Android game with ultra-low latency and DPI protection. 	QuakeLiveVPN.apk 	QR QuakeLive-VPN
+📸 SmartPhotoSync 	Automatic photo and video synchronization from smartphone to USB drive on a router. 	SmartPhotoAndroid.apk 	QR SmartPhotoSync
+📺 SmartPhotoTV 	Photo gallery and media player for Android TV and game consoles, using a remote control. 	SmartPhotoTV.apk 	QR SmartPhotoTV
+💬 Community and Feedback
+
+    📢 Telegram community and updates: t.me/SmartKeenetic
+    💬 Forum topic on the Keenetic forum: Smart-Utils, Smart-Route, and Smart-Photo applications.
+    🐞 Bug reporting and feature request tracker: github.com/snakelair/Keenetic/issues
+    💻 Source code for Smart-Utils: github.com/snakelair/SmartUtils
