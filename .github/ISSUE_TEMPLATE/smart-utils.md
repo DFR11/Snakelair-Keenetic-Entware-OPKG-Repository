@@ -1,25 +1,24 @@
-﻿---
-name: "🎛️ Баг-репорт: Smart-Utils"
-about: "Сообщить об ошибке или проблеме в веб-панели управления Smart-Utils"
-title: "[smart-utils] "
-labels: ["smart-utils", "bug"]
+---
+name: "🌐 Bug report: Smart-Route"
+about: "Report an error in the Smart-Route routing and bypass service"
+title: "[smart-route] "
+labels: ["smart-route", "bug"]
 assignees: ''
 ---
 
-## 📌 Описание проблемы
-<!-- Кратко опишите суть проблемы, возникшей в Smart-Utils -->
+## 📌 Problem description
+<!-- Briefly describe the issue with routing, DNS, interfaces, or proxying -->
 
-## 🔁 Шаги для воспроизведения
-1. Перейдите в раздел '...'
-2. Нажмите на '...'
-3. Произошла ошибка: '...'
+## 🔁 Steps to reproduce
+1.
+2.
+3.
 
-## 🎯 Ожидаемое поведение
-<!-- Что должно было произойти при нормальной работе -->
+## 🎯 Expected behavior
+<!-- What should have happened -->
 
-## 📸 Скриншоты
-<!-- Прикрепите скриншоты (Ctrl+V или перетаскиванием файла сюда) -->
+## 📸 Screenshots
+<!-- Attach screenshots (Ctrl+V or drag and drop file here) -->
 
-## 🩺 Диагностическая информация (System Diagnostics)
-<!-- Если вы сформировали баг-репорт из интерфейса Smart-Utils, блок ниже заполнится автоматически -->
-
+## 🩺 Diagnostic information (System Diagnostics)
+<!-- Auto-diagnostics from Smart-Utils / daemon status / logs -->

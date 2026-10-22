@@ -1,25 +1,23 @@
-﻿---
-name: "📸 Баг-репорт: Smart-Photo"
-about: "Сообщить об ошибке в сервере резервного копирования и галерее Smart-Photo"
-title: "[smart-photo] "
-labels: ["smart-photo", "bug"]
+---
+name: "📦 Bug report: OPKG Repo & Installer"
+about: "Report a problem with installation via install.sh or loading packages from the repository"
+title: "[keenetic-repo] "
+labels: ["keenetic-repo", "bug"]
 assignees: ''
 ---
 
-## 📌 Описание проблемы
-<!-- Опишите проблему с бэкапом фото, индексацией, превью или Android/TV клиентами -->
+## 📌 Problem description
+<!-- Describe the error when running install.sh or installing .ipk via opkg -->
 
-## 🔁 Шаги для воспроизведения
-1. 
-2. 
-3. 
+## 🔁 Steps to reproduce
+1. Command executed: `...`
+2. Terminal output: `...`
 
-## 🎯 Ожидаемое поведение
-<!-- Что должно было произойти -->
+## 🎯 Expected behavior
+<!-- What should have happened -->
 
-## 📸 Скриншоты
-<!-- Прикрепите скриншоты (Ctrl+V или перетаскиванием файла сюда) -->
+## 📸 Screenshots
+<!-- Attach screenshots -->
 
-## 🩺 Диагностическая информация (System Diagnostics)
-<!-- Автодиагностика из Smart-Utils / статус хранилища / логи -->
-
+## 🩺 Diagnostic information (System Diagnostics)
+<!-- Router architecture, KeeneticOS version, output of opkg / install.sh -->

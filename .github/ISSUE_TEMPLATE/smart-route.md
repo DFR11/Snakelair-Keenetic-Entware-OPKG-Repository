@@ -1,25 +1,24 @@
-﻿---
-name: "🌐 Баг-репорт: Smart-Route"
-about: "Сообщить об ошибке в службе маршрутизации и обхода Smart-Route"
-title: "[smart-route] "
-labels: ["smart-route", "bug"]
+---
+name: "📸 Bug report: Smart-Photo"
+about: "Report an error in the Smart-Photo backup server and gallery"
+title: "[smart-photo] "
+labels: ["smart-photo", "bug"]
 assignees: ''
 ---
 
-## 📌 Описание проблемы
-<!-- Кратко опишите проблему с маршрутизацией, DNS, интерфейсами или прокси -->
+## 📌 Problem description
+<!-- Describe the issue with photo backup, indexing, thumbnails, or Android/TV clients -->
 
-## 🔁 Шаги для воспроизведения
-1. 
-2. 
-3. 
+## 🔁 Steps to reproduce
+1.
+2.
+3.
 
-## 🎯 Ожидаемое поведение
-<!-- Что должно было произойти -->
+## 🎯 Expected behavior
+<!-- What should have happened -->
 
-## 📸 Скриншоты
-<!-- Прикрепите скриншоты (Ctrl+V или перетаскиванием файла сюда) -->
+## 📸 Screenshots
+<!-- Attach screenshots (Ctrl+V or drag and drop file here) -->
 
-## 🩺 Диагностическая информация (System Diagnostics)
-<!-- Автодиагностика из Smart-Utils / статус daemons / логи -->
-
+## 🩺 Diagnostic information (System Diagnostics)
+<!-- Auto-diagnostics from Smart-Utils / storage status / logs -->
