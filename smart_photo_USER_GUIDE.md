@@ -1,18 +1,18 @@
 # 📘 Smart-Photo User Guide
 
-**Smart-Photo** is a personal photo server and viewer for Keenetic routers with USB drives and Entware environment.
+**Smart-Photo** is a personal photo server and viewer for Keenetic routers with USB drives and the Entware environment.
 
 ---
 
 ## 1. Getting started
 
-### Step 1: Connecting a USB drive to Keenetic
+### Step 1: Connect a USB drive to the Keenetic router
 1. Connect a USB flash drive or external HDD/SSD to the USB port of the Keenetic router.
-2. In the Keenetic router web interface (in the “Network drives and USB” section), make sure that the drive is mounted.
+2. In the Keenetic router web interface (in the **Network drives and USB** section), make sure the drive is mounted.
 3. The default mount point in Entware is `/tmp/mnt/` (for example, `/tmp/mnt/DISK_NAME/Photos`).
 
 ### Step 2: Install Smart-Photo
-Execute through the SSH console of the router:
+Run the following command from the router's SSH console:
 ```bash
 curl -sSL https://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/install.sh | sh -s smart-photo
 ```
@@ -25,56 +25,56 @@ Open your browser and go to:
 
 ## 2. Setting up a photo folder and cache
 
-Go to the **⚙️Settings** tab:
-1. **Folder with photos**: specify the path to the directory with your photos on the USB drive (for example: `/tmp/mnt/USB_DRIVE/DCIM` or `/tmp/mnt/USB_DRIVE/Photos`).
+Go to the **⚙️ Settings** tab:
+1. **Photo folder**: specify the path to the directory with your photos on the USB drive (for example: `/tmp/mnt/USB_DRIVE/DCIM` or `/tmp/mnt/USB_DRIVE/Photos`).
 2. **Cache location**:
-   - *At the root of the photo folder (`.smartphoto/thumbs`)*: recommended! Thumbnails are saved directly on the flash drive, do not consume the router’s memory and are not recreated during reboots.
-   - *Custom path*: You can specify a specific folder (for example `/opt/var/cache/smart-photo`).
+   - *At the root of the photo folder (`.smartphoto/thumbs`)*: recommended! Thumbnails are saved directly on the flash drive, do not consume the router memory, and are not recreated after reboot.
+   - *Custom path*: you may specify a specific folder (for example `/opt/var/cache/smart-photo`).
 3. **Thumbnail generation threads (CPU Throttle)**:
-   - For routers with a MIPS processor (Viva, Extra, Speedster, Omni, Giga) **1-2 streams** are recommended.
-   - For Hero, Titan, Ultra, Peak you can install **2-4 streams**.
+   - For routers with a MIPS processor (Viva, Extra, Speedster, Omni, Giga), **1-2 threads** are recommended.
+   - For Hero, Titan, Ultra, and Peak, you may install **2-4 threads**.
 4. Click **Save Settings**.
 
 ---
 
 ## 3. Using the photo viewer
 
-### Infinite Timeline
-- Photos are automatically arranged in chronological order from top to bottom from newest to oldest.
+### Infinite timeline
+- Photos are automatically arranged in chronological order from newest to oldest.
 - When you scroll down the page, new photos are loaded automatically without delay.
-- As you scroll, sticky titles with the shooting date appear on the screen.
+- As you scroll, sticky titles with the capture date appear on the screen.
 
-### Full screen viewer (Lightbox)
-- Clicking on any photo opens it in full screen mode with the background darkened.
-- **Zoom**: Roll the mouse wheel or press the `+` and `-` buttons to view the photo in detail.
-- **Panning**: hold down the left mouse button on the enlarged photo and move it.
-- **Rotate**: The rotate button or key allows you to rotate the photo 90 degrees.
-- **Slide Show**: Press the `Play` button or the `Пробел` button to enable automatic slide show.
-- **Photo Details (EXIF)**: Press the `(i)` button or the `I` key on your keyboard. A side panel will open with camera parameters (shutter speed, ISO, aperture, lens model) and GPS coordinates with a button to go to the map.
+### Full-screen viewer (Lightbox)
+- Clicking on any photo opens it in full-screen mode with a darkened background.
+- **Zoom**: use the mouse wheel or the `+` / `-` buttons for detailed viewing.
+- **Pan**: hold the left mouse button on the enlarged image and move it.
+- **Rotate**: the rotate button or key allows you to rotate the image 90 degrees.
+- **Slide show**: press the **Play** button or the **Space** key to enable automatic slideshow.
+- **Photo details (EXIF)**: press the `(i)` button or the `I` key to open the side panel with camera parameters (shutter speed, ISO, aperture, lens model) and GPS coordinates.
 
 ### Hotkeys:
-- `Влево` / `Вправо` - previous / next photo.
-- `Esc` — close full screen mode.
-- `Пробел` — enable/disable the slideshow.
-- `I` — open/hide the EXIF ​​options panel.
-- `+` / `-` — enlarge / reduce the photo.
-- `0` — reset the scale to 100%.
+- `Left` / `Right` — previous / next photo
+- `Esc` — close full-screen mode
+- `Space` — enable/disable slideshow
+- `I` — open/hide the EXIF panel
+- `+` / `-` — zoom in / out
+- `0` — reset zoom to 100%
 
 ---
 
 ## 4. Managing the service on the router via SSH
 
 ```bash
-# Запуск службы
+# Start the service
 /opt/etc/init.d/S99smart-photo start
 
-# Остановка службы
+# Stop the service
 /opt/etc/init.d/S99smart-photo stop
 
-# Перезапуск службы
+# Restart the service
 /opt/etc/init.d/S99smart-photo restart
 
-# Проверка статуса и логов
+# Check status and logs
 /opt/etc/init.d/S99smart-photo check
 ```
 

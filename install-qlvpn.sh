@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # QuakeLive-VPN Server & Gateway Installer
-# Репозиторий: snakelair/Keenetic (https://github.com/snakelair/Keenetic)# ==============================================================================
+# Repository: snakelair/Keenetic (https://github.com/snakelair/Keenetic)
+# ==============================================================================
 
 set -e
 
@@ -25,7 +26,7 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
-# 2. Detect CPU Architecture
+# 2. Detect CPU architecture
 RAW_ARCH=$(uname -m)
 ARCH="amd64"
 case "$RAW_ARCH" in
@@ -43,7 +44,7 @@ esac
 
 printf "${BLUE}[*]${RESET} Server architecture: ${WHITE}%s${RESET} (binary: ${GREEN}ql-vpn-linux-%s${RESET})\n" "$RAW_ARCH" "$ARCH"
 
-# 3. Detect Public IP & WAN Interface
+# 3. Detect public IP & WAN interface
 WAN_IFACE=$(ip route get 8.8.8.8 2>/dev/null | awk '{for(i=1;i<=NF;i++)if($i=="dev")print $(i+1)}')
 if [ -z "$WAN_IFACE" ]; then
     WAN_IFACE=$(ip -4 route show default 2>/dev/null | awk '{print $5}' | head -n1)
@@ -58,9 +59,9 @@ if [ -z "$PUBLIC_IP" ]; then
     PUBLIC_IP="127.0.0.1"
 fi
 
-printf "${BLUE}[*]${RESET} Network interface: ${WHITE}%s${RESET}, External IP: ${WHITE}%s${RESET}\n\n" "${WAN_IFACE:-eth0}" "$PUBLIC_IP"
+printf "${BLUE}[*]${RESET} Network interface: ${WHITE}%s${RESET}, external IP: ${WHITE}%s${RESET}\n\n" "${WAN_IFACE:-eth0}" "$PUBLIC_IP"
 
-# 4. Interactive Configuration
+# 4. Interactive configuration
 AUTO_MODE=0
 for arg in "$@"; do
     if [ "$arg" = "-y" ] || [ "$arg" = "--auto" ] || [ "$arg" = "-auto" ]; then
@@ -71,7 +72,7 @@ done
 DEFAULT_SERVER_PORT=27960
 DEFAULT_WEB_PORT=8092
 
-# Generate random secure 8-char password
+# Generate a random secure 8-character password
 GEN_PASS=$(tr -dc 'A-Za-z0-9' </dev/urandom 2>/dev/null | head -c 8 || true)
 if [ -z "$GEN_PASS" ]; then
     GEN_PASS="QL$(date +%s | tail -c 6)"
@@ -83,17 +84,17 @@ WEB_PORT="${WEB_PORT:-$DEFAULT_WEB_PORT}"
 WEB_PASS="${WEB_PASS:-$DEFAULT_WEB_PASS}"
 
 if [ "$AUTO_MODE" -eq 0 ] && [ -t 0 ]; then
-    read -r -p "$(printf "${YELLOW}[?]${RESET} Основной игровой UDP-порт сервера [%s]: " "$DEFAULT_SERVER_PORT")" INPUT_PORT
+    read -r -p "$(printf "${YELLOW}[?]${RESET} Main game UDP server port [%s]: " "$DEFAULT_SERVER_PORT")" INPUT_PORT
     [ -n "$INPUT_PORT" ] && SERVER_PORT="$INPUT_PORT"
 
-    read -r -p "$(printf "${YELLOW}[?]${RESET} Порт веб-панели управления HTTPS [%s]: " "$DEFAULT_WEB_PORT")" INPUT_WEB_PORT
+    read -r -p "$(printf "${YELLOW}[?]${RESET} HTTPS web admin port [%s]: " "$DEFAULT_WEB_PORT")" INPUT_WEB_PORT
     [ -n "$INPUT_WEB_PORT" ] && WEB_PORT="$INPUT_WEB_PORT"
 
-    read -r -p "$(printf "${YELLOW}[?]${RESET} Пароль администратора веб-панели [%s]: " "$DEFAULT_WEB_PASS")" INPUT_PASS
+    read -r -p "$(printf "${YELLOW}[?]${RESET} Web admin password [%s]: " "$DEFAULT_WEB_PASS")" INPUT_PASS
     [ -n "$INPUT_PASS" ] && WEB_PASS="$INPUT_PASS"
 fi
 
-printf "\n${BLUE}[*]${RESET} Configuration: UDP Server ${GREEN}:%s${RESET}, HTTPS Web Panel ${GREEN}:%s${RESET}\n" "$SERVER_PORT" "$WEB_PORT"
+printf "\n${BLUE}[*]${RESET} Configuration: UDP server ${GREEN}:%s${RESET}, HTTPS web panel ${GREEN}:%s${RESET}\n" "$SERVER_PORT" "$WEB_PORT"
 
 # 5. Install system dependencies
 printf "${BLUE}[*]${RESET} Checking and installing packages (iptables, curl, ca-certificates)...\n"
@@ -109,8 +110,8 @@ elif command -v apk >/dev/null 2>&1; then
     apk add --no-cache iptables curl ca-certificates bash >/dev/null 2>&1 || true
 fi
 
-# 6. Enable IPv4 Forwarding & Firewall
-printf "${BLUE}[*]${RESET} Enabling IPv4-forwarding and configuring iptables rules...\n"
+# 6. Enable IPv4 forwarding & firewall
+printf "${BLUE}[*]${RESET} Enabling IPv4 forwarding and configuring iptables rules...\n"
 mkdir -p /etc/sysctl.d
 echo "net.ipv4.ip_forward = 1" > /etc/sysctl.d/99-qlvpn.conf
 sysctl -p /etc/sysctl.d/99-qlvpn.conf >/dev/null 2>&1 || sysctl -w net.ipv4.ip_forward=1 >/dev/null 2>&1 || true
@@ -140,8 +141,8 @@ if command -v netfilter-persistent >/dev/null 2>&1; then
     netfilter-persistent save >/dev/null 2>&1 || true
 fi
 
-# 7. Download QL-VPN Binary from Shared Keenetic Repository
-printf "${BLUE}[*]${RESET} Loading an executable file from snakelair/Keenetic...\n"
+# 7. Download the QL-VPN binary from the shared Keenetic repository
+printf "${BLUE}[*]${RESET} Downloading the executable from snakelair/Keenetic...\n"
 mkdir -p /etc/ql-vpn /usr/local/bin
 
 systemctl stop ql-vpn 2>/dev/null || true
@@ -156,7 +157,7 @@ if [ -s /usr/local/bin/ql-vpn.tmp ]; then
     chmod +x /usr/local/bin/ql-vpn.tmp
     mv -f /usr/local/bin/ql-vpn.tmp /usr/local/bin/ql-vpn
 else
-    printf "${YELLOW}[!]${RESET} The raw files repository is unavailable, I'm trying GitHub Releases...\n"
+    printf "${YELLOW}[!]${RESET} The raw file repository is unavailable; trying GitHub Releases...\n"
     curl -sSL -o /usr/local/bin/ql-vpn.tmp "$FALLBACK_URL" || true
     if [ -s /usr/local/bin/ql-vpn.tmp ]; then
         chmod +x /usr/local/bin/ql-vpn.tmp
@@ -171,7 +172,7 @@ fi
 
 chmod +x /usr/local/bin/ql-vpn
 
-# 8. Create Systemd Service
+# 8. Create systemd service
 printf "${BLUE}[*]${RESET} Registering the systemd service (ql-vpn.service)...\n"
 cat << EOF > /etc/systemd/system/ql-vpn.service
 [Unit]
@@ -189,30 +190,30 @@ RestartSec=3
 WantedBy=multi-user.target
 EOF
 
-# 9. Generate Initial Client Token
+# 9. Generate the initial client token
 printf "${BLUE}[*]${RESET} Generating the first client connection token...\n"
 TOKEN_OUTPUT=$(/usr/local/bin/ql-vpn token add -server "${PUBLIC_IP}:${SERVER_PORT}" -name "Ranger" -tokens /etc/ql-vpn/tokens.json 2>&1 || true)
 TOKEN_URL=$(echo "$TOKEN_OUTPUT" | grep -o 'qlvpn://[^ ]*' | head -n1 || true)
 
-# 10. Start Service
+# 10. Start service
 systemctl daemon-reload || true
 systemctl enable ql-vpn >/dev/null 2>&1 || true
 systemctl restart ql-vpn || true
 sleep 1
 
 if systemctl is-active --quiet ql-vpn; then
-    ACTIVE_STATUS="${GREEN}Working (Active)${RESET}"
+    ACTIVE_STATUS="${GREEN}Running (active)${RESET}"
 else
     ACTIVE_STATUS="${YELLOW}Started${RESET}"
 fi
 
-# 11. Final Summary Report
+# 11. Final summary report
 printf "\n${GREEN}================================================================================${RESET}\n"
 printf "${GREEN} [OK] QuakeLive-VPN Server successfully installed and running!${RESET}\n"
 printf "${GREEN}================================================================================${RESET}\n\n"
 printf "${WHITE}Service status:${RESET} %b\n" "$ACTIVE_STATUS"
 printf "${WHITE}Game port (UDP):${RESET} ${CYAN}%s${RESET}\n" "$SERVER_PORT"
-printf " ${WHITE}Веб-админка (HTTPS):${RESET} ${CYAN}https://%s:%s${RESET}\n" "$PUBLIC_IP" "$WEB_PORT"
+printf " ${WHITE}Web admin (HTTPS):${RESET} ${CYAN}https://%s:%s${RESET}\n" "$PUBLIC_IP" "$WEB_PORT"
 printf "${WHITE}Login:${RESET} ${CYAN}admin${RESET}\n"
 printf "${WHITE}Password:${RESET} ${YELLOW}%s${RESET}\n\n" "$WEB_PASS"
 

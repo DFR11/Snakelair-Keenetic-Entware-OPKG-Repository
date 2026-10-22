@@ -1,7 +1,8 @@
-﻿#!/bin/sh
+#!/bin/sh
 # ==============================================================================
 # Snakelair Keenetic Ecosystem & VPS Packages Uninstaller
-# Репозиторий: snakelair/Keenetic (https://github.com/snakelair/Keenetic)# ==============================================================================
+# Repository: snakelair/Keenetic (https://github.com/snakelair/Keenetic)
+# ==============================================================================
 
 set +e
 
@@ -17,24 +18,24 @@ RESET='\033[0m'
 TARGET="${1:-}"
 [ "$TARGET" = "uninstall" ] || [ "$TARGET" = "remove" ] || [ "$TARGET" = "purge" ] && TARGET="${2:-}"
 
-# Header Banner
+# Header banner
 printf "\n${CYAN}================================================================================${RESET}\n"
 printf "${CYAN}    Snakelair Keenetic Packages & Services Full Uninstaller${RESET}\n"
 printf "${CYAN}================================================================================${RESET}\n\n"
 
-# Helper Functions
+# Helper functions
 stop_and_clean_service() {
     PKG_NAME="$1"
     INIT_SCRIPT="/opt/etc/init.d/S99${PKG_NAME}"
-    
-    printf "${BLUE}[*]${RESET} Stop and delete the service ${WHITE}%s${RESET}...\n" "$PKG_NAME"
+
+    printf "${BLUE}[*]${RESET} Stopping and removing the service ${WHITE}%s${RESET}...\n" "$PKG_NAME"
 
     if [ -x "$INIT_SCRIPT" ]; then
         "$INIT_SCRIPT" stop >/dev/null 2>&1 || true
     fi
     killall -9 "$PKG_NAME" >/dev/null 2>&1 || true
 
-    # Specific cleanups for smart-route
+    # Specific cleanup for smart-route
     if [ "$PKG_NAME" = "smart-route" ]; then
         printf "${BLUE}[*]${RESET} Clearing iptables routing rules and ipset tables...\n"
         iptables -t nat -D PREROUTING -p tcp -m multiport --dports 80,443 -j REDIRECT --to-ports 10880 2>/dev/null || true
@@ -42,20 +43,20 @@ stop_and_clean_service() {
         iptables -t mangle -F SR_DIVERT 2>/dev/null || true
         iptables -t mangle -D PREROUTING -j SR_DIVERT 2>/dev/null || true
         iptables -t mangle -X SR_DIVERT 2>/dev/null || true
-        
+
         # Flush ipsets
         for SET in $(ipset list -n 2>/dev/null | grep -E '^sr_'); do
             ipset flush "$SET" 2>/dev/null || true
             ipset destroy "$SET" 2>/dev/null || true
-        done
+done
     fi
 
-    # Specific cleanups for smart-vpn
+    # Specific cleanup for smart-vpn
     if [ "$PKG_NAME" = "smart-vpn" ]; then
         killall -9 sing-box awg 2>/dev/null || true
     fi
 
-    # OPKG Remove
+    # OPKG remove
     if [ -x "/opt/bin/opkg" ]; then
         printf "${BLUE}[*]${RESET} Removing OPKG package ${WHITE}%s${RESET}...\n" "$PKG_NAME"
         /opt/bin/opkg remove "$PKG_NAME" --force-remove --force-depends >/dev/null 2>&1 || true
@@ -67,12 +68,12 @@ stop_and_clean_service() {
     rm -rf "/opt/etc/${PKG_NAME}" "/opt/var/cache/${PKG_NAME}" "/opt/var/run/${PKG_NAME}.pid" 2>/dev/null || true
     rm -f "/tmp/${PKG_NAME}.log" "/opt/var/log/${PKG_NAME}.log" 2>/dev/null || true
 
-    printf "${GREEN}[OK]${RESET} %s has been completely deleted!\n\n" "$PKG_NAME"
+    printf "${GREEN}[OK]${RESET} %s has been completely removed!\n\n" "$PKG_NAME"
 }
 
 uninstall_qlvpn() {
-    printf "${BLUE}[*]${RESET} Complete removal of QuakeLive-VPN Server (Linux VPS)...\n"
-    
+    printf "${BLUE}[*]${RESET} Completely removing QuakeLive-VPN Server (Linux VPS)...\n"
+
     # Stop & disable systemd service
     if command -v systemctl >/dev/null 2>&1; then
         systemctl stop ql-vpn >/dev/null 2>&1 || true
@@ -108,24 +109,24 @@ remove_repo_feed() {
     if [ -x "/opt/bin/opkg" ]; then
         /opt/bin/opkg update >/dev/null 2>&1 || true
     fi
-    printf "${GREEN}[OK]${RESET} The keenetic.conf repository has been deleted and the list cache has been updated.\n\n"
+    printf "${GREEN}[OK]${RESET} The keenetic.conf repository has been deleted and the cache has been refreshed.\n\n"
 }
 
-# Interactive Menu if no target specified
+# Interactive menu if no target was specified
 if [ -z "$TARGET" ]; then
     if ( exec 3>/dev/tty 4</dev/tty ) 2>/dev/null; then
         exec 3>/dev/tty 4</dev/tty
-        printf "${WHITE}Select component to completely remove:${RESET}\n" >&3
-        printf "${CYAN}1${RESET}) Smart-Utils (Web Control Panel, Terminals, File Manager)\n" >&3
-        printf "${CYAN}2${RESET}) Smart-Route (Dynamic Routing and Block Bypass Service)\n" >&3
-        printf "${CYAN}3${RESET}) Smart-Photo (Personal photo server on USB)\n" >&3
-        printf "${CYAN}4${RESET}) Smart-VPN (Managing VPN connections on the router)\n" >&3
-        printf "${CYAN}5${RESET}) QuakeLive-VPN Server (QL-VPN Service on Linux VPS)\n" >&3
-        printf "${CYAN}6${RESET}) Delete only the OPKG repository (keenetic.conf)\n" >&3
-        printf "${RED}7${RESET}) ${RED}Remove ALL Snakelair packages and OPKG repository${RESET}\n" >&3
+        printf "${WHITE}Select a component to remove completely:${RESET}\n" >&3
+        printf "${CYAN}1${RESET}) Smart-Utils (Web control panel, terminals, file manager)\n" >&3
+        printf "${CYAN}2${RESET}) Smart-Route (dynamic routing and block bypass service)\n" >&3
+        printf "${CYAN}3${RESET}) Smart-Photo (personal photo server on USB)\n" >&3
+        printf "${CYAN}4${RESET}) Smart-VPN (VPN connection management on the router)\n" >&3
+        printf "${CYAN}5${RESET}) QuakeLive-VPN Server (QL-VPN service on Linux VPS)\n" >&3
+        printf "${CYAN}6${RESET}) Remove only the OPKG repository (keenetic.conf)\n" >&3
+        printf "${RED}7${RESET}) ${RED}Remove ALL Snakelair packages and the OPKG repository${RESET}\n" >&3
         printf "${YELLOW}0${RESET}) Cancel\n\n" >&3
 
-        printf "${YELLOW}[?]${RESET} Enter item number [0-7]:" >&3
+        printf "${YELLOW}[?]${RESET} Enter an item number [0-7]:" >&3
         read -r CHOICE <&4 || CHOICE=""
         exec 3>&- 4<&-
 
@@ -147,7 +148,7 @@ if [ -z "$TARGET" ]; then
     fi
 fi
 
-# Execute Removal
+# Execute removal
 case "$TARGET" in
     smart-utils)
         stop_and_clean_service "smart-utils"
@@ -168,7 +169,7 @@ case "$TARGET" in
         remove_repo_feed
         ;;
     all|full|purge)
-        printf "${YELLOW}[!]${RESET} Starting a complete removal of all components of the Snakelair ecosystem...\n\n"
+        printf "${YELLOW}[!]${RESET} Starting complete removal of all Snakelair ecosystem components...\n\n"
         stop_and_clean_service "smart-utils"
         stop_and_clean_service "smart-route"
         stop_and_clean_service "smart-photo"
@@ -178,7 +179,7 @@ case "$TARGET" in
             uninstall_qlvpn
         fi
         printf "${GREEN}================================================================================${RESET}\n"
-        printf "${GREEN} [OK] All packages, configurations and repository have been successfully removed!${RESET}\n"
+        printf "${GREEN} [OK] All packages, settings and repository have been successfully removed!${RESET}\n"
         printf "${GREEN}================================================================================${RESET}\n\n"
         ;;
     *)

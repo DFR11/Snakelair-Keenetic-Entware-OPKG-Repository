@@ -29,9 +29,9 @@ fi
 
 # 1. Check Entware environment (for Keenetic router OPKG packages)
 if [ ! -d "/opt/bin" ] || [ ! -x "/opt/bin/opkg" ]; then
-    printf "\033[1;31m[ERROR] Entware не установлена или /opt/bin/opkg не найден!\033[0m\n"
+    printf "\033[1;31m[ERROR] Entware is not installed or /opt/bin/opkg was not found!\033[0m\n"
     printf "To install router packages (smart-utils, smart-route, smart-photo, smart-vpn), the Entware environment is required.\n"
-    printf "If you want to install QuakeLive-VPN server on VPS, run:\n"
+    printf "If you want to install QuakeLive-VPN on a VPS, run:\n"
     printf "  curl -sSL https://raw.githubusercontent.com/DFR11/Snakelair-Keenetic-Entware-OPKG-Repository/main/install-qlvpn.sh | bash\n\n"
     exit 1
 fi
@@ -89,7 +89,7 @@ if ( exec 3>/dev/tty 4</dev/tty ) 2>/dev/null; then
         SELECTED_PORT="$USER_INPUT"
     fi
 fi
-printf "\033[1;34m[*]\033[0m Port to web interface: \033[1;37m%s\033[0m\n" "$SELECTED_PORT"
+printf "\033[1;34m[*]\033[0m Port for the web interface: \033[1;37m%s\033[0m\n" "$SELECTED_PORT"
 
 # 4. Configure OPKG repository feed
 FEED_CONF="/opt/etc/opkg/keenetic.conf"
@@ -102,7 +102,7 @@ echo "src/gz keenetic-custom $REPO_URL" > "$FEED_CONF"
 # Clean stale locks
 rm -f /opt/tmp/opkg.lock /opt/var/lock/opkg.lock /opt/lib/opkg/lock 2>/dev/null || true
 
-# 5. Auto-heal broken OPKG status database (clean old prerm & fix postinst)
+# 5. Auto-heal broken OPKG status database (clean stale prerm / fix postinst)
 rm -f /opt/lib/opkg/info/${PACKAGE}.prerm /opt/var/lib/opkg/info/${PACKAGE}.prerm 2>/dev/null || true
 
 for STAT_FILE in /opt/lib/opkg/status /opt/var/lib/opkg/status; do
@@ -140,7 +140,7 @@ for STAT_FILE in /opt/lib/opkg/status /opt/var/lib/opkg/status; do
     fi
 done
 
-# 6. Update and Install
+# 6. Update and install
 printf "\033[1;34m[*]\033[0m Updating package lists...\n"
 rm -f /opt/var/opkg-lists/keenetic-custom /tmp/opkg-* /opt/tmp/opkg.lock /opt/var/lock/opkg.lock /opt/lib/opkg/lock 2>/dev/null || true
 /opt/bin/opkg update
@@ -206,7 +206,7 @@ if [ -f "$CFG_FILE" ]; then
     fi
 fi
 
-# 8. Start / Restart service safely
+# 8. Start / restart service safely
 if [ -x "/opt/etc/init.d/S99smart-utils" ] && [ "$PACKAGE" = "smart-utils" ]; then
     printf "\033[1;34m[*]\033[0m Restarting the Smart-Utils service...\n"
     /opt/etc/init.d/S99smart-utils restart >/dev/null 2>&1 || {
@@ -240,7 +240,7 @@ fi
 # 9. Wait for service and verify via real API query
 ACTIVE_VER=""
 ROUTER_MODEL=""
-printf "\033[1;34m[*]\033[0m Ожидание запуска и проверка API (http://127.0.0.1:%s/api/status)...\n" "$SELECTED_PORT"
+printf "\033[1;34m[*]\033[0m Waiting for startup and checking API (http://127.0.0.1:%s/api/status)...\n" "$SELECTED_PORT"
 for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
     sleep 1
     STATUS_JSON=$(curl -s --connect-timeout 2 "http://127.0.0.1:${SELECTED_PORT}/api/status" 2>/dev/null || wget -q -O - -T 2 "http://127.0.0.1:${SELECTED_PORT}/api/status" 2>/dev/null)
@@ -285,7 +285,7 @@ if [ $INSTALL_RES -eq 0 ]; then
     if [ -n "$ROUTER_MODEL" ]; then
         printf "\033[1;37mRouter:\033[0m \033[1;36m%s\033[0m\n" "$ROUTER_MODEL"
     fi
-    printf " \033[1;37mВеб-панель:\033[0m \033[1;36mhttp://%s:%s\033[0m\n" "$LAN_IP" "$SELECTED_PORT"
+    printf " \033[1;37mWeb panel:\033[0m \033[1;36mhttp://%s:%s\033[0m\n" "$LAN_IP" "$SELECTED_PORT"
     printf "\033[1;32m================================================================================\033[0m\n\n"
 else
     printf "\n\033[1;31m================================================================================\033[0m\n"
